@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+#include <linux/version.h>
 #include "vr_defs.h"
 #include "vr_qos.h"
 #include "vr_flow.h"
@@ -18,6 +19,10 @@ extern "C" {
 #include "vr_bridge.h"
 #include "vr_mirror.h"
 #include "vr_os.h"
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0))
+  typedef signed long time_t;
+#endif
 
 /* All *.c *.h files inside vrouter folder are listed here */
 
