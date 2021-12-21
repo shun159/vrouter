@@ -13,6 +13,7 @@
 #include <linux/etherdevice.h>
 #include <linux/types.h>
 #include <net/rtnetlink.h>
+#include <linux/ethtool.h>
 
 #include <asm/bug.h>
 
