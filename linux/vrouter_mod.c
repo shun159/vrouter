@@ -449,10 +449,10 @@ lh_pfree_skb(struct sk_buff *skb, struct vr_interface *vif,
 static void
 lh_get_mono_time(uint64_t *sec, uint64_t *nsec)
 {
-    struct timespec t;
+    struct timespec64 t;
     uint64_t jiffies = get_jiffies_64();
 
-    jiffies_to_timespec(jiffies, &t);
+    jiffies_to_timespec64(jiffies, &t);
     *sec = t.tv_sec;
     *nsec = t.tv_nsec;
 
