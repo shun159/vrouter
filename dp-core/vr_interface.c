@@ -2537,7 +2537,7 @@ vr_interface_add(vr_interface_req *req, bool need_response)
 
     if (!router || ((unsigned int)req->vifr_idx >= router->vr_max_interfaces)) {
         vr_printf("Vrouter: %s:%d vifr_idx: %d vifr_type:%d vr_max_intf : %u \n",
-                   __func__, __LINE__, req->vifr_idx, req->vifr_type, router->vr_max_interfaces);
+                   __func__, __LINE__, req->vifr_idx, req->vifr_type, VR_MAX_INTERFACES);
         ret = -EINVAL;
         goto error;
     }
@@ -3755,7 +3755,7 @@ vr_interface_clear_stats(vr_interface_req *r)
 exit_get:
     vr_message_response(VR_INTERFACE_OBJECT_ID, ret ? NULL : response, ret, false);
 
-    if(response->vifr_name)
+    if(response && response->vifr_name)
         vr_free(response->vifr_name, VR_INTERFACE_REQ_NAME_OBJECT);
     if (response != NULL)
         vr_free(response, VR_INTERFACE_REQ_OBJECT);
