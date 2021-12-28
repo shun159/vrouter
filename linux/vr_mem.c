@@ -318,6 +318,12 @@ mem_fault(struct vm_fault *vmf)
 
     switch (vmo->vmo_object_type) {
     case VR_MEM_FLOW_TABLE_OBJECT:
+        /*
+         * return VM_FAULT_SIGBUS if page fault occured before the flow table has initialized in vr_hugepage_config_process function.
+         */
+        if (!router->vr_flow_table)
+            return VM_FAULT_SIGBUS;
+
         va = vr_flow_get_va(router, offset << PAGE_SHIFT);
         break;
 
