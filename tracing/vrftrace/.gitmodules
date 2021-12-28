@@ -1,0 +1,6 @@
+[submodule "tracing/vrftrace/tf-vrouter"]
+	path = tracing/vrftrace/tf-vrouter
+	url = https://github.com/tungstenfabric/tf-vrouter
+[submodule "tracing/vrftrace/tf-common"]
+	path = tracing/vrftrace/tf-common
+	url = https://github.com/tungstenfabric/tf-common
