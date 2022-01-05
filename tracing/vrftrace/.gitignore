@@ -2,3 +2,4 @@
 vrft
 *.bpf.o
 gen-c/
+gen-go/
