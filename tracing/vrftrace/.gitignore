@@ -1,5 +1,5 @@
 .vscode
-vrft
+bin/*
 *.bpf.o
 gen-c/
 gen-go/

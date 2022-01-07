@@ -6,7 +6,8 @@ LIB_HEADERS := /usr/include/
 LIBBPF_HEADERS := /usr/include/bpf
 LIBBPF_OBJ := /usr/lib/$(shell uname -m)-linux-gnu/libbpf.a
 
-TARGET := ./bin/vrft
+MAIN := ./bin/vrft
+VRCTL := ./bin/vrctl
 GO_SRC := ./cmd/vrft
 BPF_SRCS := bpf/vrft_kprobe.bpf.c
 BPF_OBJS := bpf/vrft_kprobe.bpf.o
@@ -23,7 +24,7 @@ CFLAGS := \
   -I compat/uapi/ \
   -D__TARGET_ARCH_$(ARCH)
 
-all: $(VR_SANDESH) $(BPF_OBJS) $(TARGET)
+all: $(VR_SANDESH) $(BPF_OBJS) vrft vrctl
 
 gen_vrthrift:
 	./tools/thrift -r --gen go hack/vr.thrift
@@ -35,8 +36,11 @@ $(BPF_OBJS): $(BPF_SRCS)
 	$(CLANG) $(CFLAGS) -c $^
 
 go_env := CC=clang CGO_CFLAGS="-I $(LIBBPF_HEADERS) -I$(LIB_HEADERS) -I compat -I compat/uapi" CGO_LDFLAGS="$(LIBBPF_OBJ)"
-$(TARGET):
-	$(go_env) go build -o $(TARGET) $(GO_SRC)
+vrft:
+	$(go_env) go build -o $(MAIN) ./cmd/vrft
+
+vrctl:
+	go build -o $(VRCTL) ./cmd/vrctl
 
 clean:
 	@rm -f $(BPF_OBJS) $(BPF_HEADERS)
