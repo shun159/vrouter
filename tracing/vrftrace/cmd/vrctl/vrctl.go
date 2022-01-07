@@ -1,17 +1,22 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/mdlayher/genetlink"
+	mnetlink "github.com/mdlayher/netlink"
 	"github.com/shun159/vrftrace/gen-go/vr"
 	"github.com/vishvananda/netlink"
-	"github.com/vishvananda/netlink/nl"
 	"golang.org/x/sys/unix"
 )
 
-const NL_ATTR_VR_MESSAGE_PROTOCOL int = 1
+const NL_ATTR_VR_MESSAGE_PROTOCOL = 1
 const SANDESH_REQUEST = 1
 const VROUTER_GENETLINK_FAMILY_NAME = "vrouter"
 
@@ -56,27 +61,6 @@ func (cl *NlClient) initNlClient() error {
 	return nil
 }
 
-func (cl *NlClient) buildNlAttr(attr int, buf []byte) *nl.RtAttr {
-	return nl.NewRtAttr(attr, buf)
-}
-
-func (cl *NlClient) buildGenlh(cmd uint8, version uint8) *nl.Genlmsg {
-	return &nl.Genlmsg{
-		Command: cmd,
-		Version: version,
-	}
-}
-
-func (cl *NlClient) buildNlh(t uint16, flags uint32) *nl.NetlinkRequest {
-	return &nl.NetlinkRequest{
-		NlMsghdr: unix.NlMsghdr{
-			Len:   uint32(unix.SizeofNlMsghdr),
-			Type:  t,
-			Flags: unix.NLM_F_REQUEST | uint16(flags),
-		},
-	}
-}
-
 func (cl *NlClient) writeFcMapReq(msg vr.VrFcMapReq) ([]byte, error) {
 	if err := msg.Write(cl.Context, cl.Protocol); err != nil {
 		return []byte{}, err
@@ -101,38 +85,105 @@ func (cl *NlClient) writeMemStats(msg vr.VrMemStatsReq) ([]byte, error) {
 	return cl.Tranport.Bytes(), nil
 }
 
+func (cl *NlClient) writeVrfStatsReq(msg vr.VrVrfStatsReq) ([]byte, error) {
+	if err := msg.Write(cl.Context, cl.Protocol); err != nil {
+		return []byte{}, err
+	}
+
+	return cl.Tranport.Bytes(), nil
+}
+
+func (cl *NlClient) writeVrouterOps(msg vr.VrouterOps) ([]byte, error) {
+	if err := msg.Write(cl.Context, cl.Protocol); err != nil {
+		return []byte{}, err
+	}
+
+	return cl.Tranport.Bytes(), nil
+}
+
+func (cl *NlClient) writeVrInfo(msg vr.VrInfoReq) ([]byte, error) {
+	if err := msg.Write(cl.Context, cl.Protocol); err != nil {
+		return []byte{}, err
+	}
+
+	return cl.Tranport.Bytes(), nil
+}
+
+func (cl *NlClient) writeInterfaceReq(msg vr.VrInterfaceReq) ([]byte, error) {
+	if err := msg.Write(cl.Context, cl.Protocol); err != nil {
+		return []byte{}, err
+	}
+
+	return cl.Tranport.Bytes(), nil
+}
+
 func main() {
 	cl, err := initClient()
 	if err != nil {
 		panic(err)
 	}
 
-	fc_map_req := vr.VrMemStatsReq{}
-	fc_map_req.HOp = vr.SandeshOp_GET
+	c, err := genetlink.Dial(nil)
+	if err != nil {
+		log.Fatalf("failed to dial generic netlink: %v", err)
+	}
+	defer c.Close()
 
-	bytes, err := cl.writeMemStats(fc_map_req)
+	// Ask generic netlink if nl80211 is available.
+	family, err := c.GetFamily(VROUTER_GENETLINK_FAMILY_NAME)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf("%q family not available", "vrouter")
+			return
+		}
+
+		log.Fatalf("failed to query for family: %v", VROUTER_GENETLINK_FAMILY_NAME)
+	}
+
+	vr_mem_stats_req := vr.VrMemStatsReq{}
+	vr_mem_stats_req.HOp = vr.SandeshOp_GET
+
+	sandesh_b, err := cl.writeMemStats(vr_mem_stats_req)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("bytes: %+v\n", bytes)
 
-	nlreq := cl.buildNlh(cl.Family.ID, 0)
-	nlreq.AddData(cl.buildGenlh(SANDESH_REQUEST, 0))
-	nlreq.AddData(cl.buildNlAttr(NL_ATTR_VR_MESSAGE_PROTOCOL, bytes))
+	b, err := mnetlink.MarshalAttributes([]mnetlink.Attribute{{
+		Type: uint16(SANDESH_REQUEST),
+		Data: sandesh_b,
+	}})
 
-	msgs, err := nlreq.Execute(unix.NETLINK_GENERIC, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	req := genetlink.Message{
+		Header: genetlink.Header{
+			Command: NL_ATTR_VR_MESSAGE_PROTOCOL,
+			Version: 0,
+		},
+		Data: b,
+	}
+
+	msgs, err := c.Execute(req, family.ID, mnetlink.Request)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, m := range msgs {
-		fmt.Printf("msgs: %+v\n", m)
-
-		attrs, err := nl.ParseRouteAttr(m[nl.SizeofGenlmsg:])
+		buf := bytes.NewBuffer(m.Data[4:])
+		cl.Tranport.Buffer = buf
+		vr_resp := vr.VrResponse{}
+		err := vr_resp.Read(cl.Context, cl.Protocol)
 		if err != nil {
 			panic(err)
 		}
-
-		fmt.Printf("attrs: %+v\n", attrs)
+		if vr_resp.RespCode == 0 {
+			err := vr_mem_stats_req.Read(cl.Context, cl.Protocol)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("attrs: %+v\n", vr_mem_stats_req)
+		}
 	}
 }

@@ -43,7 +43,12 @@ static const char *s_structs[] = {
     "vr_mem_stats_req", "vr_qos_map_req",
     "vr_fc_map_req", "vr_flow_response",
     "vr_bridge_table_data", "vr_hugepage_config",
-    "vr_vrf_req",
+    "vr_vrf_req", "vr_response",
+
+    //
+    // Kernel structs
+    //
+    "sk_buff",
 };
 static size_t s_structs_len = sizeof s_structs / sizeof s_structs[0];
 static ENTRY s_structs_e, *s_structs_eptr;
@@ -101,7 +106,9 @@ static const char *s_processors[] = {
     "bridge_entry_del", "vr_drop_stats_clear", "vr_vrf_assign_dump", "vr_vrf_assign_get",
     "vr_vrf_assign_set", "vr_vrf_table_entry_del", "vr_vrf_table_entry_add",
     "vr_vrf_table_make_req", "vr_vrf_table_entry_get", "vr_vxlan_make_req",
-    "vr_vxlan_dump", "vr_vxlan_get", "vr_vxlan_del", "vr_vxlan_add"
+    "vr_vxlan_dump", "vr_vxlan_get", "vr_vxlan_del", "vr_vxlan_add",
+    "sandesh_encode", "sandesh_decode", "vr_generate_response", "vr_response_process",
+    "vr_response_queue_empty", "sandesh_decode_one"
 };
 static size_t s_processors_len = sizeof s_processors / sizeof s_processors[0];
 static ENTRY s_processors_e, *s_processors_eptr;
@@ -280,7 +287,6 @@ func NewSymsDB(traceOpt string) (SymsDB, error) {
 
 func (s *SymsDB) fillAddress() error {
 	s.Address = make(map[uint64]string)
-	re := regexp.MustCompile(`\t+\[vrouter\]`)
 	f, err := os.Open("/proc/kallsyms")
 	if err != nil {
 		return err
@@ -313,10 +319,7 @@ func (s *SymsDB) fillAddress() error {
 			continue
 		}
 
-		if re.MatchString(symbol) {
-			symbol = re.ReplaceAllString(symbol, "")
-			s.Address[addr] = symbol
-		}
+		s.Address[addr] = symbol
 	}
 
 	return nil
@@ -362,7 +365,7 @@ func (s *SymsDB) isAvailfunc(fname string) bool {
 }
 
 func (s *SymsDB) fillAvailfuncs() error {
-	re := regexp.MustCompile(` \[vrouter\]`)
+	re := regexp.MustCompile(`\s+.*$`)
 	s.Availfuncs = make(map[string]bool)
 	f, err := os.Open("/sys/kernel/debug/tracing/available_filter_functions")
 	if err != nil {
@@ -373,7 +376,7 @@ func (s *SymsDB) fillAvailfuncs() error {
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		line := sc.Text()
-		if re.MatchString(line) {
+		if true {
 			fname := re.ReplaceAllString(line, "")
 			s.Availfuncs[fname] = true
 		}

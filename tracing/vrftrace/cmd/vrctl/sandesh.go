@@ -16,7 +16,7 @@ type TSandeshProtocol struct {
 	trans         th.TRichTransport
 	origTransport th.TTransport
 	cfg           *th.TConfiguration
-	buffer        [64]byte
+	Buffer        [64]byte
 	signedness    map[int16]bool
 	is_signed     bool
 }
@@ -68,7 +68,7 @@ func (p *TSandeshProtocol) WriteStructBegin(ctx context.Context, name string) er
 		return err
 	}
 
-	if err := p.WriteString(ctx, name); err != nil {
+	if _, err := p.trans.WriteString(name); err != nil {
 		return err
 	}
 
@@ -98,6 +98,7 @@ func (p *TSandeshProtocol) WriteFieldBegin(ctx context.Context, name string, typ
 
 func (p *TSandeshProtocol) WriteListBegin(ctx context.Context, elemType th.TType, size int) error {
 	elemType = translate_ttype_to_stype(elemType, p.is_signed)
+	fmt.Printf("list: elemtype: %d size: %d\n", elemType, size)
 	if err := p.WriteByte(ctx, int8(elemType)); err != nil {
 		return err
 	}
@@ -120,21 +121,21 @@ func (p *TSandeshProtocol) WriteByte(ctx context.Context, value int8) error {
 }
 
 func (p *TSandeshProtocol) WriteI16(ctx context.Context, value int16) error {
-	value_bin := p.buffer[0:2]
+	value_bin := p.Buffer[0:2]
 	binary.BigEndian.PutUint16(value_bin, uint16(value))
 	_, err := p.trans.Write(value_bin)
 	return th.NewTProtocolException(err)
 }
 
 func (p *TSandeshProtocol) WriteI32(ctx context.Context, value int32) error {
-	value_bin := p.buffer[0:4]
+	value_bin := p.Buffer[0:4]
 	binary.BigEndian.PutUint32(value_bin, uint32(value))
 	_, err := p.trans.Write(value_bin)
 	return th.NewTProtocolException(err)
 }
 
 func (p *TSandeshProtocol) WriteI64(ctx context.Context, value int64) error {
-	value_bin := p.buffer[0:8]
+	value_bin := p.Buffer[0:8]
 	binary.BigEndian.PutUint64(value_bin, uint64(value))
 	_, err := p.trans.Write(value_bin)
 	return th.NewTProtocolException(err)
@@ -145,11 +146,17 @@ func (p *TSandeshProtocol) WriteDouble(ctx context.Context, value float64) error
 }
 
 func (p *TSandeshProtocol) WriteString(ctx context.Context, value string) error {
+	if err := p.WriteI32(ctx, int32(len(value))); err != nil {
+		return err
+	}
 	_, err := p.trans.WriteString(value)
 	return th.NewTProtocolException(err)
 }
 
 func (p *TSandeshProtocol) WriteBinary(ctx context.Context, value []byte) error {
+	if err := p.WriteI32(ctx, int32(len(value))); err != nil {
+		return err
+	}
 	_, err := p.trans.Write(value)
 	return th.NewTProtocolException(err)
 }
@@ -162,10 +169,18 @@ func (p *TSandeshProtocol) ReadStructBegin(ctx context.Context) (name string, er
 	return p.ReadString(ctx)
 }
 
+func (p *TSandeshProtocol) ReadStructEnd(ctx context.Context) error {
+	return nil
+}
+
 func (p *TSandeshProtocol) ReadFieldBegin(ctx context.Context) (name string, typeId th.TType, seqId int16, err error) {
 	t, err := p.ReadByte(ctx)
 	typeId = translate_stype_to_ttype(th.TType(t))
 	if err != nil {
+		return name, typeId, seqId, err
+	}
+
+	if typeId == th.STOP {
 		return name, typeId, seqId, err
 	}
 
@@ -213,37 +228,37 @@ func (p *TSandeshProtocol) ReadByte(ctx context.Context) (int8, error) {
 }
 
 func (p *TSandeshProtocol) ReadI16(ctx context.Context) (value int16, err error) {
-	buf := p.buffer[0:2]
+	buf := p.Buffer[0:2]
 	err = p.readAll(ctx, buf)
 	value = int16(binary.BigEndian.Uint16(buf))
 	return value, err
 }
 
 func (p *TSandeshProtocol) ReadI32(ctx context.Context) (value int32, err error) {
-	buf := p.buffer[0:4]
+	buf := p.Buffer[0:4]
 	err = p.readAll(ctx, buf)
 	value = int32(binary.BigEndian.Uint32(buf))
 	return value, err
 }
 
 func (p *TSandeshProtocol) ReadI64(ctx context.Context) (value int64, err error) {
-	buf := p.buffer[0:8]
+	buf := p.Buffer[0:8]
 	err = p.readAll(ctx, buf)
 	value = int64(binary.BigEndian.Uint64(buf))
 	return value, err
 }
 
 func (p *TSandeshProtocol) ReadDouble(ctx context.Context) (value float64, err error) {
-	buf := p.buffer[0:8]
+	buf := p.Buffer[0:8]
 	err = p.readAll(ctx, buf)
 	value = math.Float64frombits(binary.BigEndian.Uint64(buf))
 	return value, err
 }
 
 func (p *TSandeshProtocol) ReadString(ctx context.Context) (value string, err error) {
-	size, e := p.ReadI32(ctx)
-	if e != nil {
-		return "", e
+	size, err := p.ReadI32(ctx)
+	if err != nil {
+		return
 	}
 	err = checkSizeForProtocol(size, p.cfg)
 	if err != nil {
@@ -252,9 +267,9 @@ func (p *TSandeshProtocol) ReadString(ctx context.Context) (value string, err er
 	if size == 0 {
 		return
 	}
-	if size < int32(len(p.buffer)) {
+	if size < int32(len(p.Buffer)) {
 		// Avoid allocation on small reads
-		buf := p.buffer[:size]
+		buf := p.Buffer[:size]
 		read, e := io.ReadFull(p.trans, buf)
 		return string(buf[:read]), th.NewTProtocolException(e)
 	}
@@ -399,10 +414,6 @@ func (p *TSandeshProtocol) ReadMessageBegin(ctx context.Context) (name string, t
 }
 
 func (p *TSandeshProtocol) ReadMessageEnd(ctx context.Context) error {
-	return nil
-}
-
-func (p *TSandeshProtocol) ReadStructEnd(ctx context.Context) error {
 	return nil
 }
 
