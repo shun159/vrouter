@@ -57,7 +57,6 @@ func (p *TSandeshProtocol) SetTConfiguration(conf *th.TConfiguration) {
 
 func (p *TSandeshProtocol) WriteStructBegin(ctx context.Context, name string) error {
 	s, found := signedness(name)
-	fmt.Printf("%s is unrecognised struct\n", name)
 	if !found {
 		emsg := fmt.Sprintf("%s is unrecognised struct\n", name)
 		err := errors.New(emsg)
@@ -81,7 +80,6 @@ func (p *TSandeshProtocol) WriteStructEnd(ctx context.Context) error {
 }
 
 func (p *TSandeshProtocol) WriteFieldBegin(ctx context.Context, name string, typeId th.TType, id int16) error {
-	fmt.Printf("field: %v\n", name)
 	if unsigned, found := p.signedness[id]; found {
 		p.is_signed = unsigned
 	} else {
@@ -129,7 +127,6 @@ func (p *TSandeshProtocol) WriteI16(ctx context.Context, value int16) error {
 }
 
 func (p *TSandeshProtocol) WriteI32(ctx context.Context, value int32) error {
-	fmt.Printf("i32: %v\n", value)
 	value_bin := p.Buffer[0:4]
 	binary.BigEndian.PutUint32(value_bin, uint32(value))
 	_, err := p.trans.Write(value_bin)

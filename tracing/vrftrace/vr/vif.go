@@ -1,18 +1,23 @@
 package vr
 
+//#include <net/if.h>
+//#include <stdlib.h>
+import "C"
+
 import (
 	"context"
 	"encoding/binary"
 	"net"
 	"reflect"
 	"strconv"
+	"unsafe"
 
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
 // Virtual Interface Base struct
 type Vif struct {
-	VrInterfaceReq
+	*VrInterfaceReq
 	*thrift.TMemoryBuffer
 	*TSandeshProtocol
 	context.Context
@@ -25,8 +30,8 @@ func NewVif(oper, idx, viftype int32, name, ipaddr, macaddr string, transport in
 		return nil, err
 	}
 
-	vif := Vif{}
-	vif.VrInterfaceReq = VrInterfaceReq{}
+	vif := &Vif{}
+	vif.VrInterfaceReq = &VrInterfaceReq{}
 	vif.VrInterfaceReq.HOp = SandeshOp(oper)
 	vif.VrInterfaceReq.VifrIdx = idx
 	vif.VrInterfaceReq.VifrType = viftype
@@ -34,11 +39,12 @@ func NewVif(oper, idx, viftype int32, name, ipaddr, macaddr string, transport in
 	vif.VrInterfaceReq.VifrTransport = transport
 	vif.VrInterfaceReq.VifrIP = ipAddrToInt32(net.ParseIP(ipaddr))
 	vif.VrInterfaceReq.VifrMac = hwaddr
+	vif.VrInterfaceReq.VifrOsIdx = ifNameToIndex(name)
 	vif.TMemoryBuffer = thrift.NewTMemoryBuffer()
 	vif.TSandeshProtocol = NewTSandeshProtocolTransport(vif.TMemoryBuffer)
 	vif.Context = context.Background()
 
-	return &vif, nil
+	return vif, nil
 }
 
 // AgentVif config
@@ -178,7 +184,7 @@ type FabricVifConfig struct {
 	IpAddr    string `default:"0.0.0.0"`
 	McastVrf  int32  `default:65535`
 	Mtu       int32  `default:1514`
-	Flags     int32  `default:512`
+	Flags     int32  `default:384`
 	Transport int8   `default:1`
 	Vrf       int32
 }
@@ -237,9 +243,9 @@ func NewFabricVif(conf *FabricVifConfig) (*Vif, error) {
 }
 
 // Serialize Vif struct into Sandesh format binary
-func (vif *Vif) ToBinary() ([]byte, error) {
+func (vif *Vif) ToBinary(ctx context.Context, proto *TSandeshProtocol) ([]byte, error) {
 	s_req := vif.VrInterfaceReq
-	if err := s_req.Write(vif.Context, vif.TSandeshProtocol); err != nil {
+	if err := s_req.Write(ctx, proto); err != nil {
 		return []byte{}, err
 	} else {
 		return vif.TMemoryBuffer.Bytes(), nil
@@ -247,6 +253,13 @@ func (vif *Vif) ToBinary() ([]byte, error) {
 }
 
 // Helper functions
+
+func ifNameToIndex(name string) int32 {
+	c_name := C.CString(name)
+	ifindex := C.if_nametoindex(c_name)
+	defer C.free(unsafe.Pointer(c_name))
+	return int32(ifindex)
+}
 
 func ipAddrToInt32(ip net.IP) int32 {
 	if len(ip) == 16 {
