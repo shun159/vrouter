@@ -113,6 +113,7 @@ func (nl *Netlink) SendAsync(s_req Sandesh, s_rep *Sandesh) <-chan *NetlinkStrea
 			}
 			nlstream.Messages = append(nlstream.Messages, *s_rep)
 		}
+
 		stream <- &nlstream
 	}()
 

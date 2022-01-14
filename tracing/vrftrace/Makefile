@@ -26,8 +26,8 @@ CFLAGS := \
 
 all: $(VR_SANDESH) $(BPF_OBJS) vrft vrctl
 
-gen_vrthrift:
-	./tools/thrift -r --gen go hack/vr.thrift
+vr.thrift:
+	./tools/thrift -r --out .  --gen go hack/vr.thrift
 
 $(VR_SANDESH):
 	./tools/sandesh -o . --gen c tf-vrouter/sandesh/vr.sandesh 

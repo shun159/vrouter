@@ -3,3 +3,6 @@ bin/*
 *.bpf.o
 gen-c/
 gen-go/
+vr.go
+vr-consts.go
+vr/GoUnusedProtection__.go
