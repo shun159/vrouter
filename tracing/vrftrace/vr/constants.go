@@ -1,5 +1,7 @@
 package vr
 
+const ETH_ALEN = 6
+
 const SANDESH_OPER_ADD = 0
 const SANDESH_OPER_GET = 1
 const SANDESH_OPER_DEL = 2

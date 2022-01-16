@@ -44,18 +44,18 @@ struct vr_nexthop_req {
     14: i32         nhr_ref_cnt;
     15: i32         nhr_marker;
     16: i32         nhr_flags;
-    17: binary  nhr_encap;
+    17: list<byte>  nhr_encap;
     18: list<i32>   nhr_nh_list;
     19: list<i32>   nhr_label_list;
     20: i16         nhr_nh_count;
-    21: binary  nhr_tun_sip6;
-    22: binary  nhr_tun_dip6;
+    21: list<byte>  nhr_tun_sip6;
+    22: list<byte>  nhr_tun_dip6;
     23: i8        nhr_ecmp_config_hash;
-    24: binary  nhr_pbb_mac;
+    24: list<byte>  nhr_pbb_mac;
     25: i32         nhr_encap_crypt_oif_id;
     26: i32         nhr_crypt_traffic;
     27: i32         nhr_crypt_path_available;
-    28: binary  nhr_rw_dst_mac;
+    28: list<byte>  nhr_rw_dst_mac;
     29: i32         nhr_transport_label;
     30: list<i32>   nhr_encap_valid;
 }
@@ -98,7 +98,7 @@ struct vr_interface_req {
     35: i64         vifr_dev_oerrors;
     36: i32         vifr_ref_cnt;
     37: i32         vifr_marker;
-    38: binary  vifr_mac;
+    38: list<byte>  vifr_mac;
     39: i32         vifr_ip;
     40: i64         vifr_ip6_u;
     41: i64         vifr_ip6_l;
@@ -110,41 +110,41 @@ struct vr_interface_req {
     47: i32         vifr_parent_vif_idx;
     48: i32         vifr_nh_id;
     49: list<i32>   vifr_cross_connect_idx;
-    50: binary  vifr_src_mac;
+    50: list<byte>  vifr_src_mac;
     51: list<i32>   vifr_bridge_idx;
     52: i16         vifr_ovlan_id;
     53: i8        vifr_transport;
     54: list<i32>   vifr_fat_flow_protocol_port;
     55: i16         vifr_qos_map_index;
-    56: binary  vifr_in_mirror_md;
-    57: binary  vifr_out_mirror_md;
+    56: list<byte>  vifr_in_mirror_md;
+    57: list<byte>  vifr_out_mirror_md;
     58: i64         vifr_dpackets;
     59: list<i16>   vifr_hw_queues;
     60: i32         vifr_isid;
-    61: binary  vifr_pbb_mac;
+    61: list<byte>  vifr_pbb_mac;
     62: i8        vifr_vhostuser_mode;
     63: i32         vifr_mcast_vrf;
-    64: binary  vifr_if_guid;
+    64: list<byte>  vifr_if_guid;
     65: list<i64>   vifr_fat_flow_exclude_ip_list;
     66: list<i64>   vifr_fat_flow_exclude_ip6_u_list;
     67: list<i64>   vifr_fat_flow_exclude_ip6_l_list;
     68: list<i16>   vifr_fat_flow_exclude_ip6_plen_list;
     77: list<i64>   vifr_fat_flow_src_prefix_h;
     78: list<i64>   vifr_fat_flow_src_prefix_l;
-    79: binary  vifr_fat_flow_src_prefix_mask;
-    80: binary  vifr_fat_flow_src_aggregate_plen;
+    79: list<byte>  vifr_fat_flow_src_prefix_mask;
+    80: list<byte>  vifr_fat_flow_src_aggregate_plen;
     81: list<i64>   vifr_fat_flow_dst_prefix_h;
     82: list<i64>   vifr_fat_flow_dst_prefix_l;
-    83: binary  vifr_fat_flow_dst_prefix_mask;
-    84: binary  vifr_fat_flow_dst_aggregate_plen;
+    83: list<byte>  vifr_fat_flow_dst_prefix_mask;
+    84: list<byte>  vifr_fat_flow_dst_aggregate_plen;
     85: i8        vifr_intf_status;
-    86: binary  vifr_fab_name;
-    87: binary  vifr_fab_drv_name;
+    86: list<byte>  vifr_fab_name;
+    87: list<byte>  vifr_fab_drv_name;
     88: i8        vifr_num_bond_slave;
-    89: binary  vifr_bond_slave_name;
-    90: binary  vifr_bond_slave_drv_name;
+    89: list<byte>  vifr_bond_slave_name;
+    90: list<byte>  vifr_bond_slave_drv_name;
     91: i32         vifr_vlan_tag;
-    92: binary  vifr_vlan_name;
+    92: list<byte>  vifr_vlan_name;
     93: i32         vifr_loopback_ip;
 }
 
@@ -159,15 +159,15 @@ struct vr_route_req {
     1:  sandesh_op  h_op;
     2:  i32         rtr_vrf_id;
     3:  i32         rtr_family;
-    4:  binary  rtr_prefix;
+    4:  list<byte>  rtr_prefix;
     5:  i32         rtr_prefix_len;
     6:  i16         rtr_rid;
     7:  i16         rtr_label_flags;
     8:  i32         rtr_label;
     9:  i32         rtr_nh_id;
-   10:  binary  rtr_marker;
+   10:  list<byte>  rtr_marker;
    11:  i32         rtr_marker_plen;
-   12:  binary  rtr_mac;
+   12:  list<byte>  rtr_mac;
    13:  i32         rtr_replace_plen;
    14:  i32         rtr_index;
 }
@@ -223,7 +223,7 @@ struct vr_flow_req {
    18: i16          fr_sec_mir_id;
    19: i32          fr_mir_sip;
    20: i16          fr_mir_sport;
-   21: binary   fr_pcap_meta_data;
+   21: list<byte>   fr_pcap_meta_data;
    22: i16          fr_mir_vrf;
    23: i32          fr_ecmp_nh_index;
    24: i32          fr_src_nh_index;
@@ -514,12 +514,12 @@ struct vr_qos_map_req {
     1: sandesh_op       h_op;
     2: i16              qmr_rid;
     3: i16              qmr_id;
-    4: binary       qmr_dscp;
-    5: binary       qmr_dscp_fc_id;
-    6: binary       qmr_mpls_qos;
-    7: binary       qmr_mpls_qos_fc_id;
-    8: binary       qmr_dotonep;
-    9: binary       qmr_dotonep_fc_id;
+    4: list<byte>       qmr_dscp;
+    5: list<byte>       qmr_dscp_fc_id;
+    6: list<byte>       qmr_mpls_qos;
+    7: list<byte>       qmr_mpls_qos_fc_id;
+    8: list<byte>       qmr_dotonep;
+    9: list<byte>       qmr_dotonep_fc_id;
    10: i16              qmr_marker;
 }
 
@@ -527,10 +527,10 @@ struct vr_fc_map_req {
     1: sandesh_op       h_op;
     2: i16              fmr_rid;
     3: list<i16>        fmr_id;
-    4: binary       fmr_dscp;
-    5: binary       fmr_mpls_qos;
-    6: binary       fmr_dotonep;
-    7: binary       fmr_queue_id;
+    4: list<byte>       fmr_dscp;
+    5: list<byte>       fmr_mpls_qos;
+    6: list<byte>       fmr_dotonep;
+    7: list<byte>       fmr_queue_id;
     8: i16              fmr_marker;
 }
 
@@ -579,6 +579,6 @@ struct vr_hugepage_config {
     3: list<i32>    vhp_psize;
     4: i32          vhp_resp;
     5: list<i32>    vhp_mem_sz;
-    6: binary   vhp_file_paths;
+    6: list<byte>   vhp_file_paths;
     7: list<i32>    vhp_file_path_sz;
 }

@@ -30,6 +30,11 @@ func NewVif(oper, idx, viftype int32, name, ipaddr, macaddr string, transport in
 		return nil, err
 	}
 
+	hwaddr_thrift := make([]int8, len(hwaddr))
+	for idx, b := range hwaddr {
+		hwaddr_thrift[idx] = int8(b)
+	}
+
 	vif := &Vif{}
 	vif.VrInterfaceReq = &VrInterfaceReq{}
 	vif.VrInterfaceReq.HOp = SandeshOp(oper)
@@ -38,7 +43,7 @@ func NewVif(oper, idx, viftype int32, name, ipaddr, macaddr string, transport in
 	vif.VrInterfaceReq.VifrName = name
 	vif.VrInterfaceReq.VifrTransport = transport
 	vif.VrInterfaceReq.VifrIP = ipAddrToInt32(net.ParseIP(ipaddr))
-	vif.VrInterfaceReq.VifrMac = hwaddr
+	vif.VrInterfaceReq.VifrMac = hwaddr_thrift
 	vif.VrInterfaceReq.VifrOsIdx = ifNameToIndex(name)
 	vif.TMemoryBuffer = thrift.NewTMemoryBuffer()
 	vif.TSandeshProtocol = NewTSandeshProtocolTransport(vif.TMemoryBuffer)

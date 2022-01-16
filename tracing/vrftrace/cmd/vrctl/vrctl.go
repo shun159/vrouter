@@ -7,6 +7,49 @@ import (
 	"github.com/shun159/vrftrace/vr"
 )
 
+func createTenantRoute(nl *vr.Netlink) {
+	nl, err := vr.InitNetlink()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	rt_conf := vr.NewInetRouteConfig()
+	rt_conf.IPAddress = "1.1.1.5"
+	rt_conf.NhIdx = 21
+	rt_conf.Vrf = 2
+	rt_conf.LabelFlag = vr.VR_RT_ARP_PROXY_FLAG | vr.VR_RT_LABEL_VALID_FLAG
+	rt, err := vr.NewInetRoute(rt_conf)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	s_req := rt.VrRouteReq
+	stream := nl.SendAsync(s_req, nil)
+
+	<-stream
+}
+
+func createFabricRoute(nl *vr.Netlink) {
+	nl, err := vr.InitNetlink()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	rt_conf := vr.NewInetRouteConfig()
+	rt_conf.IPAddress = "8.0.0.3"
+	rt_conf.NhIdx = 10
+	rt_conf.LabelFlag = vr.VR_RT_ARP_TRAP_FLAG | vr.VR_RT_LABEL_VALID_FLAG
+	rt, err := vr.NewInetRoute(rt_conf)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	s_req := rt.VrRouteReq
+	stream := nl.SendAsync(s_req, nil)
+
+	<-stream
+}
+
 func createCacheAllNh(nl *vr.Netlink) {
 	nl, err := vr.InitNetlink()
 	if err != nil {
@@ -15,6 +58,7 @@ func createCacheAllNh(nl *vr.Netlink) {
 
 	nh_conf := vr.NewReceiveNexthopConfig()
 	nh_conf.Idx = 10
+	nh_conf.Vrf = 1
 	nh_conf.EncapOuterVifId = []int32{3}
 	nh_conf.Flags = vr.NH_FLAG_RELAXED_POLICY
 	nh, err := vr.NewReceiveNexthop(nh_conf)
@@ -48,7 +92,7 @@ func createTenantVifNh(nl *vr.Netlink) {
 		0x08, 0x00,
 	}
 	nh_conf.Idx = 21
-	nh_conf.Vrf = 0
+	nh_conf.Vrf = 2
 	nh_conf.Flags = 0x20
 	nh, err := vr.NewEncapNexthop(nh_conf)
 	if err != nil {
@@ -260,4 +304,8 @@ func main() {
 	createVhostVifNh(nl)  // vhost0 nexthop
 	createFabricVifNh(nl) // fabric nexthop
 	createCacheAllNh(nl)
+
+	// Routes
+	createFabricRoute(nl)
+	createTenantRoute(nl)
 }

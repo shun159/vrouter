@@ -85,7 +85,6 @@ func (p *TSandeshProtocol) WriteFieldBegin(ctx context.Context, name string, typ
 	} else {
 		p.is_signed = false
 	}
-
 	typeId = translate_ttype_to_stype(typeId, p.is_signed)
 	if err := p.WriteByte(ctx, int8(typeId)); err != nil {
 		return err
