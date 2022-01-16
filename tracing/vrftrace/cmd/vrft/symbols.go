@@ -44,7 +44,7 @@ static const char *s_structs[] = {
     "vr_fc_map_req", "vr_flow_response",
     "vr_bridge_table_data", "vr_hugepage_config",
     "vr_vrf_req", "vr_response", "vr_interface",
-    "vrouter",
+    "vrouter", "vr_packet",
     //
     // Kernel structs
     //

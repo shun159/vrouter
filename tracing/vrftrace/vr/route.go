@@ -7,19 +7,19 @@ import (
 	"syscall"
 )
 
-// Virtual Interface Base struct
+// Route Base struct
 type Route struct {
 	*VrRouteReq
 }
 
 // Create Route interface base object
 func NewRoute(
-	oper, family, vrf int32, prefix []int8, pref_len int32,
+	oper, family, vrf int32, prefix net.IP, pref_len int32,
 	mac string, nh_idx int32, rtr_label_flag int16,
 	rtr_label int32,
 ) (*Route, error) {
-	hwaddr := make([]byte, 0)
-	prefix_thrift := make([]int8, 0)
+	hwaddr := make([]byte, ETH_ALEN)
+	prefix_thrift := make([]int8, pref_len/8)
 
 	if macaddr, err := net.ParseMAC(mac); err == nil {
 		hwaddr = macaddr
@@ -29,6 +29,10 @@ func NewRoute(
 		hwaddr_thrift[idx] = int8(b)
 	}
 
+	for idx, o := range prefix {
+		prefix_thrift[idx] = int8(o)
+	}
+
 	route := &Route{}
 	route.VrRouteReq = NewVrRouteReq()
 	route.HOp = SandeshOp(oper)
@@ -36,7 +40,7 @@ func NewRoute(
 	route.RtrVrfID = vrf
 	route.RtrMac = hwaddr_thrift
 	route.RtrPrefix = prefix_thrift
-	route.RtrPrefixLen = int32(len(prefix_thrift)) * 8
+	route.RtrPrefixLen = pref_len
 	route.RtrNhID = nh_idx
 	route.RtrLabelFlags = rtr_label_flag
 	route.RtrLabel = rtr_label
@@ -63,7 +67,7 @@ func NewBridgeRoute(conf *BridgeRouteConfig) (*Route, error) {
 		SANDESH_OPER_ADD,
 		syscall.AF_BRIDGE,
 		conf.Vrf,
-		[]int8{},
+		[]byte{},
 		0,
 		conf.MacAddress,
 		conf.NhIdx,
@@ -80,7 +84,7 @@ type InetRouteConfig struct {
 	NhIdx      int32
 	IPAddress  string `default:"0.0.0.0"`
 	PrefixLen  int32  `default:"32"`
-	MacAddress string
+	MacAddress string `default:"00:00:00:00:00:00"`
 	LabelFlag  int16
 	Label      int32
 }
@@ -94,6 +98,9 @@ func NewInetRouteConfig() *InetRouteConfig {
 	f, _ = typ.FieldByName("IPAddress")
 	conf.IPAddress = f.Tag.Get("default")
 
+	f, _ = typ.FieldByName("MacAddress")
+	conf.MacAddress = f.Tag.Get("default")
+
 	f, _ = typ.FieldByName("PrefixLen")
 	prefix_len, _ := strconv.Atoi(f.Tag.Get("default"))
 	conf.PrefixLen = int32(prefix_len)
@@ -103,12 +110,7 @@ func NewInetRouteConfig() *InetRouteConfig {
 
 // Create Inet Route
 func NewInetRoute(conf *InetRouteConfig) (*Route, error) {
-	t_prefix := net.ParseIP(conf.IPAddress).To4()
-	prefix := make([]int8, len(t_prefix))
-	for idx, b := range t_prefix {
-		prefix[idx] = int8(b)
-	}
-
+	prefix := net.ParseIP(conf.IPAddress).To4()
 	route, _ := NewRoute(
 		SANDESH_OPER_ADD,
 		syscall.AF_INET,
@@ -153,12 +155,7 @@ func NewInet6RouteConfig() *Inet6RouteConfig {
 
 // Create Bridge Route
 func NewInet6Route(conf *Inet6RouteConfig) (*Route, error) {
-	t_prefix := net.ParseIP(conf.IPAddress).To4()
-	prefix := make([]int8, len(t_prefix))
-	for idx, b := range t_prefix {
-		prefix[idx] = int8(b)
-	}
-
+	prefix := net.ParseIP(conf.IPAddress).To16()
 	route, _ := NewRoute(
 		SANDESH_OPER_ADD,
 		syscall.AF_INET6,

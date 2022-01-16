@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-// Virtual Interface Base struct
+// nexthop Base struct
 type Nexthop struct {
 	*VrNexthopReq
 }
@@ -81,9 +81,9 @@ func NewEncapNexthop(conf *EncapNexthopConfig) (*Nexthop, error) {
 // Encap nexthop config
 type ReceiveNexthopConfig struct {
 	// Mandatory parameters
-	Idx             int32
-	EncapOuterVifId []int32
-	Encap           []byte
+	Idx        int32
+	EncapOifId []int32
+	Encap      []byte
 	// Optional Parameters
 	Flags       uint32 `default:"1"` // NH_FLAG_VALID
 	Family      byte   `default:"2"` // syscall.AF_INET
@@ -103,7 +103,7 @@ func NewReceiveNexthopConfig() *ReceiveNexthopConfig {
 
 	f, _ = typ.FieldByName("Family")
 	family, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.Flags = uint32(family)
+	conf.Family = byte(family)
 
 	return &conf
 }
@@ -116,7 +116,7 @@ func NewReceiveNexthop(conf *ReceiveNexthopConfig) (*Nexthop, error) {
 		int8(conf.Family),
 		conf.Vrf,
 		conf.Flags,
-		conf.EncapOuterVifId,
+		conf.EncapOifId,
 		conf.Encap,
 		conf.EncapFamily,
 	), nil

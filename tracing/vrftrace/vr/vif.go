@@ -58,10 +58,10 @@ type AgentVifConfig struct {
 	Name string
 	Idx  int32
 	// Optional Parameters
-	Vrf      int32 `default:65535`
-	McastVrf int32 `default:65535`
-	Mtu      int32 `default:1514`
-	Flags    int32 `default:320`
+	Vrf      int32 `default:"65535"`
+	McastVrf int32 `default:"65535"`
+	Mtu      int32 `default:"1514"`
+	Flags    int32 `default:"320"`
 }
 
 // Create agentif config with default values
@@ -80,7 +80,7 @@ func NewAgentVifConfig() *AgentVifConfig {
 
 	f, _ = typ.FieldByName("Mtu")
 	mtu, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mtu)
+	conf.Mtu = int32(mtu)
 
 	f, _ = typ.FieldByName("Flags")
 	flags, _ := strconv.Atoi(f.Tag.Get("default"))
@@ -122,10 +122,10 @@ type VhostVifConfig struct {
 	MacAddr string
 	// Optional Parameters
 	NextHop   int32
-	McastVrf  int32 `default:65535`
-	Mtu       int32 `default:1514`
-	Flags     int32 `default:384`
-	Transport int8  `default:1`
+	McastVrf  uint32 `default:"65535"`
+	Mtu       int32  `default:"1514"`
+	Flags     int32  `default:"384"`
+	Transport int8   `default:"1"`
 	Vrf       int32
 	XConnect  []string
 }
@@ -138,19 +138,19 @@ func NewVhostVifConfig() *VhostVifConfig {
 
 	f, _ = typ.FieldByName("McastVrf")
 	mcast_vrf, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mcast_vrf)
+	conf.McastVrf = uint32(mcast_vrf)
 
 	f, _ = typ.FieldByName("Mtu")
 	mtu, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mtu)
+	conf.Mtu = int32(mtu)
 
 	f, _ = typ.FieldByName("Flags")
 	flags, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(flags)
+	conf.Flags = int32(flags)
 
 	f, _ = typ.FieldByName("Transport")
 	trans, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(trans)
+	conf.Transport = int8(trans)
 
 	f, _ = typ.FieldByName("IpAddr")
 	ipaddr := f.Tag.Get("default")
@@ -178,7 +178,7 @@ func NewVhostVif(conf *VhostVifConfig) (*Vif, error) {
 	vif.VifrNhID = conf.NextHop
 	vif.VifrVrf = conf.Vrf
 	vif.VifrCrossConnectIdx = ifNamesToIndexes(conf.XConnect)
-	vif.VifrMcastVrf = conf.McastVrf
+	vif.VifrMcastVrf = int32(conf.McastVrf)
 	vif.VifrMtu = conf.Mtu
 	vif.VifrFlags = conf.Flags
 
@@ -193,10 +193,10 @@ type FabricVifConfig struct {
 	MacAddr string
 	// Optional Parameters
 	IpAddr    string `default:"0.0.0.0"`
-	McastVrf  int32  `default:65535`
-	Mtu       int32  `default:1514`
-	Flags     int32  `default:322`
-	Transport int8   `default:1`
+	McastVrf  uint32 `default:"65535"`
+	Mtu       int32  `default:"1514"`
+	Flags     int32  `default:"322"`
+	Transport int8   `default:"1"`
 	Vrf       int32
 }
 
@@ -208,11 +208,11 @@ func NewFabricVifConfig() FabricVifConfig {
 
 	f, _ = typ.FieldByName("McastVrf")
 	mcast_vrf, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mcast_vrf)
+	conf.McastVrf = uint32(mcast_vrf)
 
 	f, _ = typ.FieldByName("Mtu")
 	mtu, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mtu)
+	conf.Mtu = int32(mtu)
 
 	f, _ = typ.FieldByName("Flags")
 	flags, _ := strconv.Atoi(f.Tag.Get("default"))
@@ -220,7 +220,7 @@ func NewFabricVifConfig() FabricVifConfig {
 
 	f, _ = typ.FieldByName("Transport")
 	trans, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(trans)
+	conf.Transport = int8(trans)
 
 	f, _ = typ.FieldByName("IpAddr")
 	ipaddr := f.Tag.Get("default")
@@ -246,7 +246,7 @@ func NewFabricVif(conf FabricVifConfig) (*Vif, error) {
 	}
 
 	vif.VifrVrf = conf.Vrf
-	vif.VifrMcastVrf = conf.McastVrf
+	vif.VifrMcastVrf = int32(conf.McastVrf)
 	vif.VifrMtu = conf.Mtu
 	vif.VifrFlags = conf.Flags
 
@@ -262,11 +262,11 @@ type VirtualVifConfig struct {
 	IpAddr  string `default:"0.0.0.0"`
 	// Optional Parameters
 	Nexthop   int32
-	Mtu       int32 `default:1514`
-	Flags     int32 `default:257`
-	Transport int8  `default:1`
+	Mtu       int32 `default:"1514"`
+	Flags     int32 `default:"1"`
+	Transport int8  `default:"1"`
 	Vrf       int32
-	McastVrf  int32
+	McastVrf  uint32 `default:"65535"`
 }
 
 // Create vhost config with default values
@@ -277,11 +277,11 @@ func NewVirtualVifConfig() VirtualVifConfig {
 
 	f, _ = typ.FieldByName("McastVrf")
 	mcast_vrf, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mcast_vrf)
+	conf.McastVrf = uint32(mcast_vrf)
 
 	f, _ = typ.FieldByName("Mtu")
 	mtu, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(mtu)
+	conf.Mtu = int32(mtu)
 
 	f, _ = typ.FieldByName("Flags")
 	flags, _ := strconv.Atoi(f.Tag.Get("default"))
@@ -289,7 +289,7 @@ func NewVirtualVifConfig() VirtualVifConfig {
 
 	f, _ = typ.FieldByName("Transport")
 	trans, _ := strconv.Atoi(f.Tag.Get("default"))
-	conf.McastVrf = int32(trans)
+	conf.Transport = int8(trans)
 
 	f, _ = typ.FieldByName("IpAddr")
 	ipaddr := f.Tag.Get("default")
@@ -317,7 +317,7 @@ func NewVirtualVif(conf VirtualVifConfig) (*Vif, error) {
 	vif.VifrMtu = conf.Mtu
 	vif.VifrFlags = conf.Flags
 	vif.VifrVrf = conf.Vrf
-	vif.VifrMcastVrf = conf.McastVrf
+	vif.VifrMcastVrf = int32(conf.McastVrf)
 
 	return vif, nil
 }

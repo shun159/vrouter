@@ -31,8 +31,8 @@ type Netlink struct {
 
 // netlink stream
 type NetlinkStream struct {
-	Messages []Sandesh
-	Error    *error
+	Buffer *bytes.Buffer
+	Error  *error
 }
 
 // Instantiate netlink
@@ -57,7 +57,7 @@ func InitNetlink() (*Netlink, error) {
 	return &netlink, nil
 }
 
-func (nl *Netlink) SendAsync(s_req Sandesh, s_rep *Sandesh) <-chan *NetlinkStream {
+func (nl *Netlink) SendAsync(s_req Sandesh) <-chan *NetlinkStream {
 	stream := make(chan *NetlinkStream)
 	nlstream := NetlinkStream{}
 
@@ -67,6 +67,7 @@ func (nl *Netlink) SendAsync(s_req Sandesh, s_rep *Sandesh) <-chan *NetlinkStrea
 			stream <- &nlstream
 			return
 		}
+
 		s_req_b := nl.Transport.Bytes()
 		nl_msg, err := buildNlMsg(s_req_b)
 		if err != nil {
@@ -89,31 +90,7 @@ func (nl *Netlink) SendAsync(s_req Sandesh, s_rep *Sandesh) <-chan *NetlinkStrea
 		}
 
 		b := msgs[0].Data[4:]
-		nl.Transport.Buffer = bytes.NewBuffer(b)
-		resp := &VrResponse{}
-		if err := resp.Read(nl.Ctx, nl.Protocol); err != nil {
-			nlstream.Error = &err
-			stream <- &nlstream
-			return
-		}
-
-		nlstream.Messages = append(nlstream.Messages, resp)
-
-		if nl.Transport.Buffer.Len() < 4 {
-			nlstream.Error = &err
-			stream <- &nlstream
-			return
-		}
-
-		if s_rep != nil {
-			if err := (*s_rep).Read(nl.Ctx, nl.Protocol); err != nil {
-				nlstream.Error = &err
-				stream <- &nlstream
-				return
-			}
-			nlstream.Messages = append(nlstream.Messages, *s_rep)
-		}
-
+		nlstream.Buffer = bytes.NewBuffer(b)
 		stream <- &nlstream
 	}()
 
