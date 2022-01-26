@@ -118,13 +118,15 @@ type InetFlowConfig struct {
 	// Mandatory Parameters
 	SrcIP    string `default:"0.0.0.0"`
 	DstIP    string `default:"0.0.0.0"`
-	SrcPort  int16
-	DstPort  int16
+	SrcPort  uint16
+	DstPort  uint16
 	Protocol int8
+	Action   int16 `default:"2"`
 	// Optional Parameters
+	Index          int32 `default:"-1"`
 	Flags          int16 `default:"1"`
 	Nexthop        int32
-	ReverseNexthop int32
+	ReverseNexthop int32 `default:"0"`
 	Vrf            int16
 }
 
@@ -138,6 +140,10 @@ func NewInetFlowConfig() InetFlowConfig {
 	flags, _ := strconv.Atoi(f.Tag.Get("default"))
 	conf.Flags = int16(flags)
 
+	f, _ = typ.FieldByName("Action")
+	action, _ := strconv.Atoi(f.Tag.Get("default"))
+	conf.Action = int16(action)
+
 	f, _ = typ.FieldByName("SrcIP")
 	srcIP := f.Tag.Get("default")
 	conf.SrcIP = srcIP
@@ -146,16 +152,26 @@ func NewInetFlowConfig() InetFlowConfig {
 	dstIP := f.Tag.Get("default")
 	conf.DstIP = dstIP
 
+	f, _ = typ.FieldByName("Index")
+	index, _ := strconv.Atoi(f.Tag.Get("default"))
+	conf.Index = int32(index)
+
+	f, _ = typ.FieldByName("ReverseNexthop")
+	rflow_nh, _ := strconv.Atoi(f.Tag.Get("default"))
+	conf.ReverseNexthop = int32(rflow_nh)
+
 	return conf
 }
 
 func NewInetFlow(conf InetFlowConfig) (*Flow, error) {
 	flowspec := flowSpec{
+		index:          conf.Index,
+		action:         conf.Action,
 		family:         syscall.AF_INET,
 		srcIP:          net.ParseIP(conf.SrcIP),
 		dstIP:          net.ParseIP(conf.DstIP),
-		srcPort:        conf.SrcPort,
-		dstPort:        conf.DstPort,
+		srcPort:        int16(conf.SrcPort),
+		dstPort:        int16(conf.DstPort),
 		proto:          conf.Protocol,
 		nhId:           conf.Nexthop,
 		vrf:            conf.Vrf,
@@ -163,8 +179,8 @@ func NewInetFlow(conf InetFlowConfig) (*Flow, error) {
 		flags:          conf.Flags,
 		reverseSrcIP:   net.ParseIP(conf.DstIP),
 		reverseDstIP:   net.ParseIP(conf.SrcIP),
-		reverseSrcPort: conf.DstPort,
-		reverseDstPort: conf.SrcPort,
+		reverseSrcPort: int16(conf.DstPort),
+		reverseDstPort: int16(conf.SrcPort),
 	}
 
 	return NewFlow(&flowspec)
@@ -176,7 +192,7 @@ type Inet6FlowConfig struct {
 	SrcIP    string `default:"::"`
 	DstIP    string `default:"::"`
 	SrcPort  int16
-	DstPort  int16
+	DstPort  uint16
 	Protocol int8
 	// Optional Parameters
 	Flags          int16 `default:"1"`
@@ -211,8 +227,8 @@ func NewInet6Flow(conf Inet6FlowConfig) (*Flow, error) {
 		family:         syscall.AF_INET6,
 		srcIP:          net.ParseIP(conf.SrcIP),
 		dstIP:          net.ParseIP(conf.DstIP),
-		srcPort:        conf.SrcPort,
-		dstPort:        conf.DstPort,
+		srcPort:        int16(conf.SrcPort),
+		dstPort:        int16(conf.DstPort),
 		proto:          conf.Protocol,
 		nhId:           conf.Nexthop,
 		vrf:            conf.Vrf,
@@ -220,8 +236,8 @@ func NewInet6Flow(conf Inet6FlowConfig) (*Flow, error) {
 		flags:          conf.Flags,
 		reverseSrcIP:   net.ParseIP(conf.DstIP),
 		reverseDstIP:   net.ParseIP(conf.SrcIP),
-		reverseSrcPort: conf.DstPort,
-		reverseDstPort: conf.SrcPort,
+		reverseSrcPort: int16(conf.DstPort),
+		reverseDstPort: int16(conf.SrcPort),
 	}
 
 	return NewFlow(&flowspec)

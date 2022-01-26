@@ -93,6 +93,7 @@ func (nl *Netlink) SendAsync(s_req Sandesh) <-chan *NetlinkStream {
 		nlstream.Buffer = bytes.NewBuffer(b)
 		stream <- &nlstream
 	}()
+	nl.Transport.Reset()
 
 	return stream
 }
