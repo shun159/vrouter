@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 	"syscall"
@@ -10,20 +9,14 @@ import (
 )
 
 func createInetFlow0() *vr.Flow {
-	data := []uint8{0, 53}
-	srcPort := binary.LittleEndian.Uint16(data)
-
-	data2 := []uint8{235, 25}
-	dstPort := binary.LittleEndian.Uint16(data2)
-
 	flow_conf := vr.NewInetFlowConfig()
 	flow_conf.Index = -1
 	flow_conf.Action = vr.VR_FLOW_ACTION_FORWARD
 	flow_conf.SrcIP = "1.1.1.1"
 	flow_conf.DstIP = "1.1.1.2"
 	flow_conf.Protocol = syscall.IPPROTO_UDP
-	flow_conf.SrcPort = srcPort
-	flow_conf.DstPort = dstPort
+	flow_conf.SrcPort = 53
+	flow_conf.DstPort = 60185
 	flow_conf.Nexthop = 49
 	flow, _ := vr.NewInetFlow(flow_conf)
 	return flow
@@ -114,31 +107,6 @@ func createVirtualVif_2() *vr.Vif {
 	return virtual
 }
 
-func createVhostVif() *vr.Vif {
-	vhost_conf := vr.NewVhostVifConfig()
-	vhost_conf.Idx = 1
-	vhost_conf.IpAddr = "8.0.0.3"
-	vhost_conf.Name = "vhost0"
-	vhost_conf.MacAddr = "ce:c5:38:b7:64:b3"
-	vhost_conf.NextHop = 5
-	vhost_conf.Flags = vr.VIF_FLAG_XCONNECT
-	vhost_conf.XConnect = []string{"fabric0"}
-	vhost, _ := vr.NewVhostVif(vhost_conf)
-
-	return vhost
-}
-
-func createFabricVif() *vr.Vif {
-	fabric_conf := vr.NewFabricVifConfig()
-	fabric_conf.Idx = 0
-	fabric_conf.Name = "fabric0"
-	fabric_conf.MacAddr = "ce:c5:38:b7:64:b3"
-	fabric_conf.Flags = vr.VIF_FLAG_VHOST_PHYS
-	fabric, _ := vr.NewFabricVif(fabric_conf)
-
-	return fabric
-}
-
 func createRoute(nl *vr.Netlink) {
 	routes := []*vr.Route{
 		createBrRoute0(),
@@ -192,8 +160,6 @@ func createVif(nl *vr.Netlink) {
 	// VIF
 	vifs := []*vr.Vif{
 		createAgentVif(),     // pkt0
-		createFabricVif(),    // fabric0
-		createVhostVif(),     // vhost0
 		createVirtualVif_1(), // tap0
 		createVirtualVif_2(), // tap1
 	}

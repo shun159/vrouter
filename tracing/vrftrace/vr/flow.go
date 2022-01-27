@@ -170,8 +170,8 @@ func NewInetFlow(conf InetFlowConfig) (*Flow, error) {
 		family:         syscall.AF_INET,
 		srcIP:          net.ParseIP(conf.SrcIP),
 		dstIP:          net.ParseIP(conf.DstIP),
-		srcPort:        int16(conf.SrcPort),
-		dstPort:        int16(conf.DstPort),
+		srcPort:        int16(uInt16beTouInt16le(conf.SrcPort)),
+		dstPort:        int16(uInt16beTouInt16le(conf.DstPort)),
 		proto:          conf.Protocol,
 		nhId:           conf.Nexthop,
 		vrf:            conf.Vrf,
@@ -179,8 +179,8 @@ func NewInetFlow(conf InetFlowConfig) (*Flow, error) {
 		flags:          conf.Flags,
 		reverseSrcIP:   net.ParseIP(conf.DstIP),
 		reverseDstIP:   net.ParseIP(conf.SrcIP),
-		reverseSrcPort: int16(conf.DstPort),
-		reverseDstPort: int16(conf.SrcPort),
+		reverseSrcPort: int16(uInt16beTouInt16le(conf.DstPort)),
+		reverseDstPort: int16(uInt16beTouInt16le(conf.SrcPort)),
 	}
 
 	return NewFlow(&flowspec)
@@ -191,7 +191,7 @@ type Inet6FlowConfig struct {
 	// Mandatory Parameters
 	SrcIP    string `default:"::"`
 	DstIP    string `default:"::"`
-	SrcPort  int16
+	SrcPort  uint16
 	DstPort  uint16
 	Protocol int8
 	// Optional Parameters
@@ -227,8 +227,8 @@ func NewInet6Flow(conf Inet6FlowConfig) (*Flow, error) {
 		family:         syscall.AF_INET6,
 		srcIP:          net.ParseIP(conf.SrcIP),
 		dstIP:          net.ParseIP(conf.DstIP),
-		srcPort:        int16(conf.SrcPort),
-		dstPort:        int16(conf.DstPort),
+		srcPort:        int16(uInt16beTouInt16le(conf.SrcPort)),
+		dstPort:        int16(uInt16beTouInt16le(conf.DstPort)),
 		proto:          conf.Protocol,
 		nhId:           conf.Nexthop,
 		vrf:            conf.Vrf,
@@ -236,8 +236,8 @@ func NewInet6Flow(conf Inet6FlowConfig) (*Flow, error) {
 		flags:          conf.Flags,
 		reverseSrcIP:   net.ParseIP(conf.DstIP),
 		reverseDstIP:   net.ParseIP(conf.SrcIP),
-		reverseSrcPort: int16(conf.DstPort),
-		reverseDstPort: int16(conf.SrcPort),
+		reverseSrcPort: int16(uInt16beTouInt16le(conf.DstPort)),
+		reverseDstPort: int16(uInt16beTouInt16le(conf.SrcPort)),
 	}
 
 	return NewFlow(&flowspec)
@@ -312,8 +312,8 @@ func NewNatFlow(conf NatFlowConfig) (*Flow, error) {
 		action:         VR_FLOW_ACTION_NAT,
 		srcIP:          net.ParseIP(conf.SrcIP),
 		dstIP:          net.ParseIP(conf.DstIP),
-		srcPort:        int16(conf.SrcPort),
-		dstPort:        int16(conf.DstPort),
+		srcPort:        int16(uInt16beTouInt16le(conf.SrcPort)),
+		dstPort:        int16(uInt16beTouInt16le(conf.DstPort)),
 		proto:          conf.Protocol,
 		nhId:           conf.Nexthop,
 		srcNhIndex:     conf.SrcNexthop,
@@ -323,8 +323,8 @@ func NewNatFlow(conf NatFlowConfig) (*Flow, error) {
 		flags:          int16(conf.Flags),
 		reverseSrcIP:   net.ParseIP(conf.ReverseDstIP),
 		reverseDstIP:   net.ParseIP(conf.ReverseSrcIP),
-		reverseSrcPort: int16(conf.DstPort),
-		reverseDstPort: int16(conf.ReverseSrcPort),
+		reverseSrcPort: int16(uInt16beTouInt16le(conf.DstPort)),
+		reverseDstPort: int16(uInt16beTouInt16le(conf.ReverseSrcPort)),
 		qosId:          conf.QosId,
 		ecmpNhIndex:    conf.EcmpNexthop,
 	}
@@ -347,4 +347,11 @@ func ipToULInt64(family int32, ipaddr net.IP) (int64, int64) {
 	}
 
 	return upper, lower
+}
+
+func uInt16beTouInt16le(n uint16) uint16 {
+	lower := uint8(n & 0x00ff)
+	upper := uint8((n & 0xff00) >> 8)
+	data := []uint8{upper, lower}
+	return binary.LittleEndian.Uint16(data)
 }
