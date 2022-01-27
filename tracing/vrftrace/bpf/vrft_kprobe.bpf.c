@@ -7,7 +7,7 @@
 static __inline uint64_t
 get_func_ip(void *ctx)
 {
-  return PT_REGS_IP((struct pt_regs *)ctx) - 1;
+    return PT_REGS_IP((struct pt_regs *)ctx) - 1;
 }
 
 SEC("kprobe/vrft_main")
