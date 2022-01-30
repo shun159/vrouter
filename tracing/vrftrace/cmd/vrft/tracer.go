@@ -158,15 +158,16 @@ func attachKprobe(symdb *SymsDB, progs map[string]*bpf.BPFProg) error {
 	return err
 }
 
-func kProbeCb(symdb *SymsDB) chan []byte {
+func kProbeCb(symdb *SymsDB, bpfmap *bpf.BPFMap) chan []byte {
 	e := make(chan []byte, 1000)
 	go func() {
 		for b := range e {
 			tstamp := binary.LittleEndian.Uint64(b[0:8])
 			faddr := binary.LittleEndian.Uint64(b[8:16])
 			processor_id := binary.LittleEndian.Uint32(b[16:20])
+			arg_size := binary.LittleEndian.Uint64(b[24:32])
 			if s, ok := symdb.Address[faddr]; ok {
-				fmt.Printf("%-20d %03d %-64.64s\n", tstamp, processor_id, s)
+				fmt.Printf("%-20d %03d %-64.64s %+v bytes\n", tstamp, processor_id, s, arg_size)
 			}
 		}
 	}()
@@ -202,7 +203,13 @@ func TracerRun(symdb *SymsDB) error {
 		return err
 	}
 
-	e := kProbeCb(symdb)
+	// Get stack map(need to be refactored)
+	bpfmap, err := bpfmod.GetMap("arg_data")
+	if err != nil {
+		return err
+	}
+
+	e := kProbeCb(symdb, bpfmap)
 
 	perf, err := createPerfbuf(bpfmod, e)
 	if err != nil {
