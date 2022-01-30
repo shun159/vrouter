@@ -22,6 +22,10 @@ CFLAGS := \
   -target bpf \
   -I compat \
   -I compat/uapi/ \
+	-I tf-vrouter/include \
+	-I tf-common/ \
+	-I tf-common/sandesh/library/c \
+	-I gen-c \
   -D__TARGET_ARCH_$(ARCH)
 
 all: $(VR_SANDESH) $(BPF_OBJS) vrft vrctl

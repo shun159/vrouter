@@ -174,7 +174,7 @@ func createVirtualVif_1() *vr.Vif {
 	virtual_conf.Nexthop = 49
 	virtual_conf.Vrf = 0
 	virtual_conf.McastVrf = 2
-	virtual_conf.Flags = vr.VIF_FLAG_L2_ENABLED | vr.VIF_FLAG_POLICY_ENABLED
+	virtual_conf.Flags = vr.VIF_FLAG_L3_ENABLED | vr.VIF_FLAG_L2_ENABLED | vr.VIF_FLAG_POLICY_ENABLED
 	virtual, _ := vr.NewVirtualVif(virtual_conf)
 
 	return virtual
@@ -189,7 +189,7 @@ func createVirtualVif_2() *vr.Vif {
 	virtual_conf.Nexthop = 47
 	virtual_conf.Vrf = 0
 	virtual_conf.McastVrf = 2
-	virtual_conf.Flags = vr.VIF_FLAG_L2_ENABLED | vr.VIF_FLAG_POLICY_ENABLED
+	virtual_conf.Flags = vr.VIF_FLAG_L3_ENABLED | vr.VIF_FLAG_L2_ENABLED | vr.VIF_FLAG_POLICY_ENABLED
 	virtual, _ := vr.NewVirtualVif(virtual_conf)
 
 	return virtual

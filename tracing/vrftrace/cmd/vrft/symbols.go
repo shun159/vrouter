@@ -54,6 +54,8 @@ static const char *s_structs[] = {
     "vr_bridge_table_data",
     "vr_hugepage_config",
     "vr_vrf_req",
+    "vr_packet",
+    "sk_buff",
 };
 static size_t s_structs_len = sizeof s_structs / sizeof s_structs[0];
 static ENTRY s_structs_e, *s_structs_eptr;
@@ -124,7 +126,7 @@ btf_find_sandesh_pos(const struct btf *btf, const struct btf_type *t) {
     for (uint16_t i = 0; i < btf_vlen(func_proto); i++) {
         t = btf__type_by_id(btf, params[i].type);
 
-        while (btf_is_mod(t) || btf_is_typedef(t))
+        while (btf_is_mod(t))
             t = btf__type_by_id(btf, t->type);
 
         if (btf_is_struct(t) || btf_is_union(t))
@@ -132,14 +134,13 @@ btf_find_sandesh_pos(const struct btf *btf, const struct btf_type *t) {
     }
 
     for (uint16_t i = 0; i < btf_vlen(func_proto) && i < MAX_POS - 1; i++) {
-
         t = btf__type_by_id(btf, params[i].type);
+
         if (!btf_is_ptr(t))
             continue;
 
         t = btf__type_by_id(btf, t->type);
         st_name = btf__str_by_offset(btf, t->name_off);
-
         stype = sname_type(st_name);
         if (stype < 0)
           continue;
@@ -188,9 +189,6 @@ import (
 	"unsafe"
 )
 
-const VROUTER_BTF_FILE = "bpf/vrouter.btf"
-const KERNEL_ADDR_SPACE = 0x00ffffffffffffff
-
 type SymInfo struct {
 	Pos   uint16
 	Sname string
@@ -201,6 +199,9 @@ type SymsDB struct {
 	Address    map[uint64]string
 	SymInfo    map[string]SymInfo
 }
+
+const VROUTER_BTF_FILE = "bpf/vrouter.btf"
+const KERNEL_ADDR_SPACE = 0x00ffffffffffffff
 
 func NewSymsDB(traceOpt string) (SymsDB, error) {
 	symsdb := SymsDB{}
@@ -286,6 +287,7 @@ func (s *SymsDB) fillSymInfo(traceOpt string) error {
 				pos := uint16(stype_pos & 0x00ff)
 				sname := C.GoString(C.sname_by_idx(stype_pos >> 8))
 				syminfo := SymInfo{Pos: pos, Sname: sname}
+				fmt.Printf("fname: %s sym: %+v\n", fname, syminfo)
 				s.SymInfo[fname] = syminfo
 			} else {
 				continue
