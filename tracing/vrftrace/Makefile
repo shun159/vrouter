@@ -4,7 +4,7 @@ CLANG ?= clang
 
 LIB_HEADERS := /usr/include/
 LIBBPF_HEADERS := /usr/include/bpf
-LIBBPF_OBJ := /usr/lib/$(shell uname -m)-linux-gnu/libbpf.a
+LIBBPF_OBJ := /usr/lib64/libbpf.a
 
 MAIN := ./bin/vrft
 VRCTL := ./bin/vrctl
@@ -20,6 +20,7 @@ CFLAGS := \
   -O3 \
   -Wextra \
   -target bpf \
+  -fpie \
   -I compat \
   -I compat/uapi/ \
 	-I tf-vrouter/include \
@@ -41,7 +42,7 @@ $(BPF_OBJS): $(BPF_SRCS)
 
 go_env := CC=clang CGO_CFLAGS="-I $(LIBBPF_HEADERS) -I$(LIB_HEADERS) -I compat -I compat/uapi" CGO_LDFLAGS="$(LIBBPF_OBJ)"
 vrft:
-	$(go_env) go build -o $(MAIN) ./cmd/vrft
+	$(go_env) go build -v -o $(MAIN) ./cmd/vrft
 
 vrctl:
 	go build -o $(VRCTL) ./cmd/vrctl

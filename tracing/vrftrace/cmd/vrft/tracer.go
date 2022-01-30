@@ -1,6 +1,5 @@
 package main
 
-import "C"
 import (
 	"encoding/binary"
 	"errors"
@@ -10,7 +9,7 @@ import (
 	"strconv"
 	"syscall"
 
-	bpf "github.com/aquasecurity/tracee/libbpfgo"
+	bpf "github.com/aquasecurity/libbpfgo"
 )
 
 var PROG_NAMES = []string{
@@ -194,18 +193,18 @@ func TracerRun(symdb *SymsDB) error {
 		return err
 	}
 
+	// Get stack map(need to be refactored)
+	bpfmap, err := bpfmod.GetMap("arg_data")
+	if err != nil {
+		return err
+	}
+
 	prog, err := bpfProgCreate(bpfmod)
 	if err != nil {
 		return err
 	}
 
 	if err := attachKprobe(symdb, prog); err != nil {
-		return err
-	}
-
-	// Get stack map(need to be refactored)
-	bpfmap, err := bpfmod.GetMap("arg_data")
-	if err != nil {
 		return err
 	}
 

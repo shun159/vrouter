@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/apache/thrift v0.15.0
-	github.com/aquasecurity/tracee/libbpfgo v0.0.0-20210130081938-febd3de75f55
+	github.com/aquasecurity/libbpfgo v0.2.3-libbpf-0.6.1
 	github.com/mdlayher/genetlink v1.1.0 // indirect
 	github.com/mdlayher/netlink v1.5.0 // indirect
 	github.com/vishvananda/netlink v1.1.0 // indirect
