@@ -14,6 +14,13 @@
 
 static uint64_t get_func_ip(void *ctx);
 
+#define READ_KERNEL(field)    \
+    bpf_probe_read_kernel(    \
+        s_req.field,          \
+        sizeof(s_req.field),  \
+        &req->field           \
+    );
+
 struct vrft_event {
     uint64_t tstamp;
     uint64_t faddr;
@@ -43,34 +50,6 @@ struct {
     __type(key, uint32_t);
     __type(value, uint64_t);
 } sreq_index SEC(".maps");
-
-
-#define KPROBE(sname, processor)                       \
-SEC("kprobe/##sname")                                  \
-int sname##1(struct pt_regs *ctx) {                    \
-    sname *req = (sname *)PT_REGS_PARM1(ctx);      \
-    return processor(ctx, 0, req);                   \
-}                                                      \
-SEC("kprobe/##sname")                                  \
-int sname##2(struct pt_regs *ctx) {                    \
-    sname *req = (sname *)PT_REGS_PARM2(ctx);      \
-    return processor(ctx, 0, req);                   \
-}                                                      \
-SEC("kprobe/##sname")                                  \
-int sname##3(struct pt_regs *ctx) {                    \
-    sname *req = (sname *)PT_REGS_PARM3(ctx);      \
-    return processor(ctx, 0, req);                   \
-}                                                      \
-SEC("kprobe/##sname")                                  \
-int sname##4(struct pt_regs *ctx) {                    \
-    sname *req = (sname *)PT_REGS_PARM4(ctx);      \
-    return processor(ctx, 0, req);                   \
-}                                                      \
-SEC("kprobe/##sname")                                  \
-int sname##5(struct pt_regs *ctx) {                    \
-    sname *req = (sname *)PT_REGS_PARM5(ctx);      \
-    return processor(ctx, 0, req);                   \
-}                                                      
 
 
 static __inline int
@@ -105,19 +84,18 @@ static __inline int
 vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     struct vrft_event e = {0};
     struct vifr s_req = {0};
+    uint64_t idx = add_idx_by_1(0);
   
     bpf_probe_read_kernel_str(s_req.vifr_name, sizeof(s_req.vifr_name) - 1, &req->vifr_name);
-    bpf_probe_read_kernel(&s_req.h_op, sizeof(s_req.h_op), &req->h_op);
-    bpf_probe_read_kernel(&s_req.vifr_type, sizeof(s_req.vifr_type), &req->vifr_type);
-    bpf_probe_read_kernel(&s_req.vifr_flags, sizeof(s_req.vifr_flags), &req->vifr_flags);
-    bpf_probe_read_kernel(&s_req.vifr_vrf, sizeof(s_req.vifr_vrf), &req->vifr_vrf);
-    bpf_probe_read_kernel(&s_req.vifr_idx, sizeof(s_req.vifr_idx), &req->vifr_idx);
-    bpf_probe_read_kernel(&s_req.vifr_rid, sizeof(s_req.vifr_rid), &req->vifr_rid);
-    bpf_probe_read_kernel(&s_req.vifr_os_idx, sizeof(s_req.vifr_os_idx), &req->vifr_os_idx);
-    bpf_probe_read_kernel(&s_req.vifr_mtu, sizeof(s_req.vifr_mtu), &req->vifr_mtu);
-    bpf_probe_read_kernel(&s_req.vifr_vlan_id, sizeof(s_req.vifr_vlan_id), &req->vifr_vlan_id);
-
-    uint64_t idx = add_idx_by_1(0);
+    READ_KERNEL(h_op);
+    READ_KERNEL(vifr_type);
+    READ_KERNEL(vifr_flags);
+    READ_KERNEL(vifr_vrf);
+    READ_KERNEL(vifr_idx);
+    READ_KERNEL(vifr_rid);
+    READ_KERNEL(vifr_os_idx);
+    READ_KERNEL(vifr_mtu);
+    READ_KERNEL(vifr_vlan_id);
 
     e.tstamp = bpf_ktime_get_ns();
     e.faddr = get_func_ip(ctx);
@@ -125,8 +103,6 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     e.is_return = is_return;
     e.arg_size = (uint64_t)sizeof(vr_interface_req);
     e.index = idx;
-
-    bpf_printk("vifr_size: %d\n", sizeof(struct vifr));
 
     bpf_map_update_elem(&arg_data, &idx, &s_req, BPF_ANY);
     bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
@@ -141,8 +117,60 @@ vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
 
 static __inline int
 vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
-    //bpf_map_push_elem(&arg_data, &req, 0);
-    return emit_vrft_event(ctx, is_return, sizeof(vr_nexthop_req));
+    struct vrft_event e = {0};
+    struct nhr s_req = {0};
+    uint64_t idx = add_idx_by_1(0);
+
+    READ_KERNEL(h_op);
+    READ_KERNEL(nhr_type);
+    READ_KERNEL(nhr_family);
+    READ_KERNEL(nhr_id);
+    READ_KERNEL(nhr_rid);
+    READ_KERNEL(nhr_encap_oif_id);
+    READ_KERNEL(nhr_encap_oif_id_size);
+    READ_KERNEL(nhr_encap_len);
+    READ_KERNEL(nhr_encap_family);
+    READ_KERNEL(nhr_vrf);
+    READ_KERNEL(nhr_tun_sip);
+    READ_KERNEL(nhr_tun_dip);
+    READ_KERNEL(nhr_tun_sport);
+    READ_KERNEL(nhr_tun_dport);
+    READ_KERNEL(nhr_ref_cnt);
+    READ_KERNEL(nhr_marker);
+    READ_KERNEL(nhr_flags);
+    READ_KERNEL(nhr_encap);
+    READ_KERNEL(nhr_encap_size);
+    READ_KERNEL(nhr_nh_list);
+    READ_KERNEL(nhr_nh_list_size);
+    READ_KERNEL(nhr_label_list);
+    READ_KERNEL(nhr_label_list_size);
+    READ_KERNEL(nhr_nh_count);
+    READ_KERNEL(nhr_tun_sip6);
+    READ_KERNEL(nhr_tun_sip6_size);
+    READ_KERNEL(nhr_tun_dip6);
+    READ_KERNEL(nhr_tun_dip6_size);
+    READ_KERNEL(nhr_ecmp_config_hash);
+    READ_KERNEL(nhr_pbb_mac);
+    READ_KERNEL(nhr_pbb_mac_size);
+    READ_KERNEL(nhr_encap_crypt_oif_id);
+    READ_KERNEL(nhr_crypt_traffic);
+    READ_KERNEL(nhr_crypt_path_available);
+    READ_KERNEL(nhr_rw_dst_mac);
+    READ_KERNEL(nhr_rw_dst_mac_size);
+    READ_KERNEL(nhr_transport_label);
+    READ_KERNEL(nhr_encap_valid);
+    READ_KERNEL(nhr_encap_valid_size);
+
+    e.tstamp = bpf_ktime_get_ns();
+    e.faddr = get_func_ip(ctx);
+    e.processor_id = bpf_get_smp_processor_id();
+    e.is_return = is_return;
+    e.arg_size = (uint64_t)sizeof(vr_interface_req);
+    e.index = idx;
+
+    bpf_map_update_elem(&arg_data, &idx, &s_req, BPF_ANY);
+    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
+    return 0;
 }
 
 static __inline int
