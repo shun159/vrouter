@@ -44,6 +44,35 @@ struct {
     __type(value, uint64_t);
 } sreq_index SEC(".maps");
 
+
+#define KPROBE(sname, processor)                       \
+SEC("kprobe/##sname")                                  \
+int sname##1(struct pt_regs *ctx) {                    \
+    sname *req = (sname *)PT_REGS_PARM1(ctx);      \
+    return processor(ctx, 0, req);                   \
+}                                                      \
+SEC("kprobe/##sname")                                  \
+int sname##2(struct pt_regs *ctx) {                    \
+    sname *req = (sname *)PT_REGS_PARM2(ctx);      \
+    return processor(ctx, 0, req);                   \
+}                                                      \
+SEC("kprobe/##sname")                                  \
+int sname##3(struct pt_regs *ctx) {                    \
+    sname *req = (sname *)PT_REGS_PARM3(ctx);      \
+    return processor(ctx, 0, req);                   \
+}                                                      \
+SEC("kprobe/##sname")                                  \
+int sname##4(struct pt_regs *ctx) {                    \
+    sname *req = (sname *)PT_REGS_PARM4(ctx);      \
+    return processor(ctx, 0, req);                   \
+}                                                      \
+SEC("kprobe/##sname")                                  \
+int sname##5(struct pt_regs *ctx) {                    \
+    sname *req = (sname *)PT_REGS_PARM5(ctx);      \
+    return processor(ctx, 0, req);                   \
+}                                                      
+
+
 static __inline int
 emit_vrft_event(void *ctx, int8_t is_return, size_t arg_size) {
    struct vrft_event e = {0};
