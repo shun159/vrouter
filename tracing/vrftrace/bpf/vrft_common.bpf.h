@@ -38,19 +38,32 @@ struct {
 } events SEC(".maps");
 
 struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 1 << 24);
-    __type(key, uint64_t);
-    __type(value, struct vifr);
-} arg_data SEC(".maps");
-
-struct {
     __uint(type, BPF_MAP_TYPE_ARRAY);
     __uint(max_entries, 256);
     __type(key, uint32_t);
     __type(value, uint64_t);
 } sreq_index SEC(".maps");
 
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 1 << 24);
+    __type(key, uint64_t);
+    __type(value, struct vifr);
+} vr_interface_req_map SEC(".maps");
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 1 << 24);
+    __type(key, uint64_t);
+    __type(value, struct nhr);
+} vr_nexthop_req_map SEC(".maps");
+
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 1 << 24);
+    __type(key, uint64_t);
+    __type(value, struct rtr);
+} vr_route_req_map SEC(".maps");
 
 static __inline int
 emit_vrft_event(void *ctx, int8_t is_return, size_t arg_size) {
@@ -104,15 +117,45 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     e.arg_size = (uint64_t)sizeof(vr_interface_req);
     e.index = idx;
 
-    bpf_map_update_elem(&arg_data, &idx, &s_req, BPF_ANY);
+    bpf_map_update_elem(&vr_route_req_map, &idx, &s_req, BPF_ANY);
     bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
     return 0;
 }
 
 static __inline int
 vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
-    //bpf_map_push_elem(&arg_data, &req, 0);
-    return emit_vrft_event(ctx, is_return, sizeof(vr_route_req));
+    struct vrft_event e = {0};
+    struct rtr s_req = {0};
+    uint64_t idx = add_idx_by_1(0);
+
+    READ_KERNEL(h_op);
+    READ_KERNEL(rtr_vrf_id);
+    READ_KERNEL(rtr_family);
+    READ_KERNEL(rtr_prefix);
+    READ_KERNEL(rtr_prefix_size);
+    READ_KERNEL(rtr_prefix_len);
+    READ_KERNEL(rtr_rid);
+    READ_KERNEL(rtr_label_flags);
+    READ_KERNEL(rtr_label);
+    READ_KERNEL(rtr_nh_id);
+    READ_KERNEL(rtr_marker);
+    READ_KERNEL(rtr_marker_size);
+    READ_KERNEL(rtr_marker_plen);
+    READ_KERNEL(rtr_mac);
+    READ_KERNEL(rtr_mac_size);
+    READ_KERNEL(rtr_replace_plen);
+    READ_KERNEL(rtr_index);
+
+    e.tstamp = bpf_ktime_get_ns();
+    e.faddr = get_func_ip(ctx);
+    e.processor_id = bpf_get_smp_processor_id();
+    e.is_return = is_return;
+    e.arg_size = (uint64_t)sizeof(vr_interface_req);
+    e.index = idx;
+
+    bpf_map_update_elem(&vr_nexthop_req_map, &idx, &s_req, BPF_ANY);
+    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
+    return 0;
 }
 
 static __inline int
@@ -168,7 +211,7 @@ vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
     e.arg_size = (uint64_t)sizeof(vr_interface_req);
     e.index = idx;
 
-    bpf_map_update_elem(&arg_data, &idx, &s_req, BPF_ANY);
+    bpf_map_update_elem(&vr_nexthop_req_map, &idx, &s_req, BPF_ANY);
     bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
     return 0;
 }

@@ -62,3 +62,24 @@ struct nhr {
   int32_t * nhr_encap_valid;
   u_int32_t nhr_encap_valid_size;
 };
+
+/* sandesh vr_route_req */
+struct rtr {
+  sandesh_op h_op;
+  int32_t rtr_vrf_id;
+  int32_t rtr_family;
+  int8_t * rtr_prefix;
+  u_int32_t rtr_prefix_size;
+  int32_t rtr_prefix_len;
+  int16_t rtr_rid;
+  int16_t rtr_label_flags;
+  int32_t rtr_label;
+  int32_t rtr_nh_id;
+  int8_t * rtr_marker;
+  u_int32_t rtr_marker_size;
+  int32_t rtr_marker_plen;
+  int8_t * rtr_mac;
+  u_int32_t rtr_mac_size;
+  int32_t rtr_replace_plen;
+  int32_t rtr_index;
+};
