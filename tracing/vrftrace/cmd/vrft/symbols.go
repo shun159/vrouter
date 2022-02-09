@@ -54,8 +54,8 @@ static const char *s_structs[] = {
     "vr_bridge_table_data",
     "vr_hugepage_config",
     "vr_vrf_req",
-    "vr_packet",
-    "sk_buff",
+    //"vr_packet",
+    //"sk_buff",
 };
 static size_t s_structs_len = sizeof s_structs / sizeof s_structs[0];
 static ENTRY s_structs_e, *s_structs_eptr;
@@ -225,6 +225,7 @@ func NewSymsDB(traceOpt string) (SymsDB, error) {
 
 func (s *SymsDB) fillAddress() error {
 	s.Address = make(map[uint64]string)
+	re := regexp.MustCompile(`\t+\[vrouter\]`)
 	f, err := os.Open("/proc/kallsyms")
 	if err != nil {
 		return err
@@ -257,7 +258,10 @@ func (s *SymsDB) fillAddress() error {
 			continue
 		}
 
-		s.Address[addr] = symbol
+		if re.MatchString(symbol) {
+			symbol = re.ReplaceAllString(symbol, "")
+			s.Address[addr] = symbol
+		}
 	}
 
 	return nil
@@ -306,7 +310,7 @@ func (s *SymsDB) isAvailfunc(fname string) bool {
 }
 
 func (s *SymsDB) fillAvailfuncs() error {
-	re := regexp.MustCompile(`\s+.*$`)
+	re := regexp.MustCompile(` *\[vrouter\]`)
 	s.Availfuncs = make(map[string]bool)
 	f, err := os.Open("/sys/kernel/debug/tracing/available_filter_functions")
 	if err != nil {
@@ -317,7 +321,7 @@ func (s *SymsDB) fillAvailfuncs() error {
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		line := sc.Text()
-		if true {
+		if re.MatchString(line) {
 			fname := re.ReplaceAllString(line, "")
 			s.Availfuncs[fname] = true
 		}

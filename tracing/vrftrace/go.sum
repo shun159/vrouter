@@ -69,6 +69,8 @@ github.com/mdlayher/socket v0.1.0 h1:PBV/PxzCp56zuT74AY8vz2dtifidvlI2p65OTqIsqhM
 github.com/mdlayher/socket v0.1.0/go.mod h1:mYV5YIZAfHh4dzDVzI8x8tWLWCliuX8Mon5Awbj+qDs=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/shun159/libbpfgo v0.2.4-libbpf-0.6.1.0.20220131051813-8ea14b8613e9 h1:ZMyBeG7TEp62QXnTdV21hAJ8KScleLwwH8N9m0ucAlc=
+github.com/shun159/libbpfgo v0.2.4-libbpf-0.6.1.0.20220131051813-8ea14b8613e9/go.mod h1:/+clceXE103FaXvVTIY2HAkQjxNtkra4DRWvZYr2SKw=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=

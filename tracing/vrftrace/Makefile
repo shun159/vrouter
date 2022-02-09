@@ -3,8 +3,8 @@
 CLANG ?= clang
 
 LIB_HEADERS := /usr/include/
-LIBBPF_HEADERS := /usr/include/bpf
-LIBBPF_OBJ := /usr/lib64/libbpf.a
+LIBBPF_HEADERS := /usr/local/include/bpf/
+LIBBPF_OBJ := /usr/local/lib64/libbpf.a
 
 MAIN := ./bin/vrft
 VRCTL := ./bin/vrctl
