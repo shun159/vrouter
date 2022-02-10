@@ -21,6 +21,13 @@ static uint64_t get_func_ip(void *ctx);
         &req->FIELD           \
     );
 
+#define READ_KERNEL_STR(FIELD)    \
+    bpf_probe_read_kernel_str(    \
+        &s_req.FIELD,         \
+        sizeof(s_req.FIELD),  \
+        &req->FIELD           \
+    );
+
 struct vrft_event {
     uint64_t tstamp;
     uint64_t faddr;
@@ -38,119 +45,119 @@ struct {
 
 struct {
     __uint(type, BPF_MAP_TYPE_ARRAY);
-    __uint(max_entries, 256);
+    __uint(max_entries, 1024);
     __type(key, uint32_t);
     __type(value, uint64_t);
 } sreq_index SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vifr);
 } vr_interface_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct nhr);
 } vr_nexthop_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct rtr);
 } vr_route_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct var);
 } vr_vrf_assign_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct mr);
 } vr_mpls_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vsr);
 } vr_vrf_stats_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct mirr);
 } vr_mirror_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct fr);
 } vr_flow_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct resp);
 } vr_response_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct ftable);
 } vr_flow_table_data_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vrf);
 } vr_vrf_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vxlanr);
 } vr_vxlan_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vxlanr);
 } vr_fc_map_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct qmr);
 } vr_qos_map_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct vds);
 } vr_drop_stats_req_map SEC(".maps");
 
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
+    __uint(max_entries,  1024);
     __type(key, uint64_t);
     __type(value, struct btable);
 } vr_bridge_table_data_map SEC(".maps");
@@ -218,6 +225,7 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     READ_KERNEL(vifr_ovlan_id);
     READ_KERNEL(vifr_transport);
 
+    bpf_printk("%s\n", s_req.vifr_name);
     bpf_map_update_elem(&vr_interface_req_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
     return 0;

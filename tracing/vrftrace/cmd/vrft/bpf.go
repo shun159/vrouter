@@ -10,6 +10,7 @@ import (
 )
 
 const KPROBE_PROG = "./vrft_kprobe.bpf.o"
+const ATTACH_RESULT_FMT = "\rAttaching program (total: %d, succeeded: %d, failed: %d)"
 
 var maxSandeshPos = 5
 var sandeshStructs = []string{
@@ -32,6 +33,37 @@ var sandeshStructs = []string{
 }
 var progNames = []string{}
 var progDb = make(map[string]*bpf.BPFProg)
+var mapNames = []string{}
+var mapDb = make(map[string]*bpf.BPFMap)
+
+func initBPF(symdb *SymsDB) (*bpf.PerfBuffer, error) {
+	initBPFProgs()
+	initBPFMaps()
+
+	bpfmod, err := bpfModCreate()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bpfProgCreate(bpfmod); err != nil {
+		return nil, err
+	}
+
+	if err := attachKprobes(symdb); err != nil {
+		return nil, err
+	}
+
+	if err := bpfMapCreate(bpfmod); err != nil {
+		return nil, err
+	}
+
+	perf, err := createPerfbuf(bpfmod, perfMapCb(symdb))
+	if err != nil {
+		return nil, err
+	}
+
+	return perf, nil
+}
 
 func initBPFProgs() {
 	for _, st := range sandeshStructs {
@@ -39,6 +71,13 @@ func initBPFProgs() {
 			name := strings.Join([]string{st, strconv.Itoa(i)}, "")
 			progNames = append(progNames, name)
 		}
+	}
+}
+
+func initBPFMaps() {
+	for _, st := range sandeshStructs {
+		name := strings.Join([]string{st, "_map"}, "")
+		mapNames = append(mapNames, name)
 	}
 }
 
@@ -69,6 +108,17 @@ func bpfProgCreate(bpfmod *bpf.Module) error {
 	}
 }
 
+func bpfMapCreate(bpfmod *bpf.Module) error {
+	for _, mapname := range mapNames {
+		if bpfmap, err := bpfmod.GetMap(mapname); err != nil {
+			return err
+		} else {
+			mapDb[mapname] = bpfmap
+		}
+	}
+	return nil
+}
+
 func attachKprobes(symdb *SymsDB) error {
 	var succeed int
 	var failed int
@@ -78,12 +128,11 @@ func attachKprobes(symdb *SymsDB) error {
 	for symbol, syminfo := range symdb.SymInfo {
 		if err := attachKprobe(symbol, syminfo); err != nil {
 			failed = failed + 1
-			fmt.Printf("Attach kprobe failed for %s\n", symbol)
 			err = errors.New("Attach kprobe failed")
 			break
 		}
 		succeed = succeed + 1
-		fmt.Printf("\rAttaching program (total: %d, succeeded: %d, failed: %d)", total, succeed, failed)
+		fmt.Printf(ATTACH_RESULT_FMT, total, succeed, failed)
 	}
 	fmt.Println("")
 
@@ -108,4 +157,13 @@ func createPerfbuf(bpfmod *bpf.Module, e chan []byte) (*bpf.PerfBuffer, error) {
 		return nil, err
 	}
 	return p, nil
+}
+
+func findMap(sname string) *bpf.BPFMap {
+	map_name := strings.Join([]string{sname, "_map"}, "")
+	if bpfmap, ok := mapDb[map_name]; ok {
+		return bpfmap
+	} else {
+		return nil
+	}
 }
