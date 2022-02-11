@@ -195,7 +195,7 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     struct vrft_event e = {0};
     struct vifr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
-  
+
     READ_KERNEL(h_op);
     READ_KERNEL(vifr_core);
     READ_KERNEL(vifr_type);
@@ -205,27 +205,15 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     READ_KERNEL(vifr_rid);
     READ_KERNEL(vifr_os_idx);
     READ_KERNEL(vifr_mtu);
-    READ_KERNEL(vifr_name);
     READ_KERNEL(vifr_ref_cnt);
     READ_KERNEL(vifr_marker);
-    READ_KERNEL(vifr_mac);
-    READ_KERNEL(vifr_mac_size);
     READ_KERNEL(vifr_ip);
     READ_KERNEL(vifr_ip6_u);
     READ_KERNEL(vifr_ip6_l);
-    READ_KERNEL(vifr_context);
-    READ_KERNEL(vifr_mir_id);
-    READ_KERNEL(vifr_speed);
-    READ_KERNEL(vifr_duplex);
     READ_KERNEL(vifr_vlan_id);
-    READ_KERNEL(vifr_parent_vif_idx);
     READ_KERNEL(vifr_nh_id);
-    READ_KERNEL(vifr_src_mac);
-    READ_KERNEL(vifr_src_mac_size);
-    READ_KERNEL(vifr_ovlan_id);
     READ_KERNEL(vifr_transport);
 
-    bpf_printk("%s\n", s_req.vifr_name);
     bpf_map_update_elem(&vr_interface_req_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
     return 0;
@@ -240,19 +228,8 @@ vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
     READ_KERNEL(h_op);
     READ_KERNEL(rtr_vrf_id);
     READ_KERNEL(rtr_family);
-    READ_KERNEL(rtr_prefix);
-    READ_KERNEL(rtr_prefix_size);
-    READ_KERNEL(rtr_prefix_len);
     READ_KERNEL(rtr_rid);
-    READ_KERNEL(rtr_label_flags);
-    READ_KERNEL(rtr_label);
     READ_KERNEL(rtr_nh_id);
-    READ_KERNEL(rtr_marker);
-    READ_KERNEL(rtr_marker_size);
-    READ_KERNEL(rtr_marker_plen);
-    READ_KERNEL(rtr_mac);
-    READ_KERNEL(rtr_mac_size);
-    READ_KERNEL(rtr_replace_plen);
     READ_KERNEL(rtr_index);
 
     bpf_map_update_elem(&vr_route_req_map, &idx, &s_req, BPF_ANY);
@@ -271,40 +248,7 @@ vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
     READ_KERNEL(nhr_family);
     READ_KERNEL(nhr_id);
     READ_KERNEL(nhr_rid);
-    READ_KERNEL(nhr_encap_oif_id);
-    READ_KERNEL(nhr_encap_oif_id_size);
-    READ_KERNEL(nhr_encap_len);
-    READ_KERNEL(nhr_encap_family);
-    READ_KERNEL(nhr_vrf);
-    READ_KERNEL(nhr_tun_sip);
-    READ_KERNEL(nhr_tun_dip);
-    READ_KERNEL(nhr_tun_sport);
-    READ_KERNEL(nhr_tun_dport);
-    READ_KERNEL(nhr_ref_cnt);
-    READ_KERNEL(nhr_marker);
     READ_KERNEL(nhr_flags);
-    READ_KERNEL(nhr_encap);
-    READ_KERNEL(nhr_encap_size);
-    READ_KERNEL(nhr_nh_list);
-    READ_KERNEL(nhr_nh_list_size);
-    READ_KERNEL(nhr_label_list);
-    READ_KERNEL(nhr_label_list_size);
-    READ_KERNEL(nhr_nh_count);
-    READ_KERNEL(nhr_tun_sip6);
-    READ_KERNEL(nhr_tun_sip6_size);
-    READ_KERNEL(nhr_tun_dip6);
-    READ_KERNEL(nhr_tun_dip6_size);
-    READ_KERNEL(nhr_ecmp_config_hash);
-    READ_KERNEL(nhr_pbb_mac);
-    READ_KERNEL(nhr_pbb_mac_size);
-    READ_KERNEL(nhr_encap_crypt_oif_id);
-    READ_KERNEL(nhr_crypt_traffic);
-    READ_KERNEL(nhr_crypt_path_available);
-    READ_KERNEL(nhr_rw_dst_mac);
-    READ_KERNEL(nhr_rw_dst_mac_size);
-    READ_KERNEL(nhr_transport_label);
-    READ_KERNEL(nhr_encap_valid);
-    READ_KERNEL(nhr_encap_valid_size);
 
     bpf_map_update_elem(&vr_nexthop_req_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
@@ -659,7 +603,9 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
     READ_KERNEL(btable_rid);
     READ_KERNEL(btable_size);
     READ_KERNEL(btable_dev);
-    READ_KERNEL(btable_file_path);
+    READ_KERNEL_STR(btable_file_path);
+
+    bpf_printk("path: %s\n", s_req.btable_file_path);
 
     bpf_map_update_elem(&vr_bridge_table_data_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);

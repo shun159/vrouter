@@ -161,6 +161,7 @@ func createPerfbuf(bpfmod *bpf.Module, e chan []byte) (*bpf.PerfBuffer, error) {
 
 func findMap(sname string) *bpf.BPFMap {
 	map_name := strings.Join([]string{sname, "_map"}, "")
+	fmt.Printf("map: %s\n", map_name)
 	if bpfmap, ok := mapDb[map_name]; ok {
 		return bpfmap
 	} else {

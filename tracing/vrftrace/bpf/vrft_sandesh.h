@@ -17,68 +17,25 @@ struct vifr {
   int32_t vifr_rid;
   int32_t vifr_os_idx;
   int32_t vifr_mtu;
-  char * vifr_name;
   int32_t vifr_ref_cnt;
   int32_t vifr_marker;
-  int8_t * vifr_mac;
-  u_int32_t vifr_mac_size;
   uint32_t vifr_ip;
   uint64_t vifr_ip6_u;
   uint64_t vifr_ip6_l;
-  int32_t vifr_context;
-  int16_t vifr_mir_id;
-  int32_t vifr_speed;
-  int32_t vifr_duplex;
   int16_t vifr_vlan_id;
-  int32_t vifr_parent_vif_idx;
   int32_t vifr_nh_id;
-  int8_t * vifr_src_mac;
-  u_int32_t vifr_src_mac_size;
-  int16_t vifr_ovlan_id;
   int8_t vifr_transport;
 };
 
 /* sandesh vr_nexthop_req */
 struct nhr {
   sandesh_op h_op;
+  int8_t _pad[2];
   int8_t nhr_type;
   int8_t nhr_family;
   int32_t nhr_id;
   int32_t nhr_rid;
-  int32_t * nhr_encap_oif_id;
-  u_int32_t nhr_encap_oif_id_size;
-  int32_t nhr_encap_len;
-  int32_t nhr_encap_family;
-  int32_t nhr_vrf;
-  uint32_t nhr_tun_sip;
-  uint32_t nhr_tun_dip;
-  int16_t nhr_tun_sport;
-  int16_t nhr_tun_dport;
-  int32_t nhr_ref_cnt;
-  int32_t nhr_marker;
   uint32_t nhr_flags;
-  int8_t * nhr_encap;
-  u_int32_t nhr_encap_size;
-  int32_t * nhr_nh_list;
-  u_int32_t nhr_nh_list_size;
-  int32_t * nhr_label_list;
-  u_int32_t nhr_label_list_size;
-  int16_t nhr_nh_count;
-  int8_t * nhr_tun_sip6;
-  u_int32_t nhr_tun_sip6_size;
-  int8_t * nhr_tun_dip6;
-  u_int32_t nhr_tun_dip6_size;
-  int8_t nhr_ecmp_config_hash;
-  int8_t * nhr_pbb_mac;
-  u_int32_t nhr_pbb_mac_size;
-  int32_t nhr_encap_crypt_oif_id;
-  int32_t nhr_crypt_traffic;
-  int32_t nhr_crypt_path_available;
-  int8_t * nhr_rw_dst_mac;
-  u_int32_t nhr_rw_dst_mac_size;
-  uint32_t nhr_transport_label;
-  int32_t * nhr_encap_valid;
-  u_int32_t nhr_encap_valid_size;
 };
 
 /* sandesh vr_route_req */
@@ -86,19 +43,9 @@ struct rtr {
   sandesh_op h_op;
   int32_t rtr_vrf_id;
   int32_t rtr_family;
-  int8_t * rtr_prefix;
-  u_int32_t rtr_prefix_size;
-  int32_t rtr_prefix_len;
+  int8_t _pad[2];
   int16_t rtr_rid;
-  int16_t rtr_label_flags;
-  int32_t rtr_label;
   int32_t rtr_nh_id;
-  int8_t * rtr_marker;
-  u_int32_t rtr_marker_size;
-  int32_t rtr_marker_plen;
-  int8_t * rtr_mac;
-  u_int32_t rtr_mac_size;
-  int32_t rtr_replace_plen;
   int32_t rtr_index;
 };
 
@@ -355,5 +302,5 @@ struct btable {
   uint16_t btable_rid;
   uint32_t btable_size;
   uint16_t btable_dev;
-  char * btable_file_path;
+  char btable_file_path[255];
 };

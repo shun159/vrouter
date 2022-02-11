@@ -42,7 +42,7 @@ func perfMapCb(symdb *SymsDB) chan []byte {
 		for b := range e {
 			perf := parsePerfEvent(b, *symdb)
 			idx := perf.Idx
-			fmt.Printf("%-20d %03d %-20.20s %s\n", perf.Tstamp, perf.ProcessorId, perf.Fname, perf.Sname)
+			fmt.Printf("%-20d %03d %-50.50s %s\n", perf.Tstamp, perf.ProcessorId, perf.Fname, perf.Sname)
 
 			bpfmap := findMap(perf.Sname)
 			if bpfmap == nil {
@@ -52,10 +52,23 @@ func perfMapCb(symdb *SymsDB) chan []byte {
 
 			data, err := bpfmap.GetValue(unsafe.Pointer(&idx))
 			if err != nil {
-				fmt.Printf("map error: %+v\n", err)
 				continue
+				fmt.Printf("map error: %+v\n", err)
 			}
-			fmt.Printf("data: %+v\n", data)
+
+			switch perf.Sname {
+			case "vr_interface_req":
+				vifr := parseVifr(data)
+				fmt.Printf("data: %+v\n", vifr)
+			case "vr_route_req":
+				vifr := parseRtr(data)
+				fmt.Printf("data: %+v\n", vifr)
+			case "vr_nexthop_req":
+				vifr := parseNhr(data)
+				fmt.Printf("data: %+v\n", vifr)
+			default:
+				fmt.Printf("data: %+v\n", data)
+			}
 		}
 	}()
 	return e
