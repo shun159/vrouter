@@ -66,6 +66,7 @@ struct mr {
   sandesh_op h_op;
   int32_t mr_label;
   int16_t mr_rid;
+  uint8_t pad[2];
   int32_t mr_nhid;
   int32_t mr_marker;
 };
@@ -75,6 +76,7 @@ struct vsr {
   sandesh_op h_op;
   int16_t vsr_rid;
   int16_t vsr_family;
+  uint8_t _pad1[2];
   int16_t vsr_type;
   int32_t vsr_vrf;
   int64_t vsr_discards;
@@ -88,6 +90,7 @@ struct vsr {
   int64_t vsr_gre_mpls_tunnels;
   int64_t vsr_l2_encaps;
   int64_t vsr_encaps;
+  uint8_t _pad2[6];
   int16_t vsr_marker;
   int64_t vsr_gros;
   int64_t vsr_diags;

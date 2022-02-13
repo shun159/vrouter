@@ -52,21 +52,13 @@ func perfMapCb(symdb *SymsDB) chan []byte {
 
 			data, err := bpfmap.GetValue(unsafe.Pointer(&idx))
 			if err != nil {
-				continue
 				fmt.Printf("map error: %+v\n", err)
+				continue
 			}
 
-			switch perf.Sname {
-			case "vr_interface_req":
-				vifr := parseVifr(data)
-				fmt.Printf("data: %+v\n", vifr)
-			case "vr_route_req":
-				vifr := parseRtr(data)
-				fmt.Printf("data: %+v\n", vifr)
-			case "vr_nexthop_req":
-				vifr := parseNhr(data)
-				fmt.Printf("data: %+v\n", vifr)
-			default:
+			if req := parseSreq(perf, data); req != nil {
+				fmt.Printf("data: %+v\n", req)
+			} else {
 				fmt.Printf("data: %+v\n", data)
 			}
 		}
