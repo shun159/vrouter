@@ -10,23 +10,26 @@ import (
 func parseSreq(perf PerfEvent, data []byte) vr.Sandesh {
 	switch perf.Sname {
 	case "vr_interface_req":
-		vifr := parseVifr(data)
-		return vifr
+		req := parseVifr(data)
+		return req
 	case "vr_route_req":
-		rtr := parseRtr(data)
-		return rtr
+		req := parseRtr(data)
+		return req
 	case "vr_nexthop_req":
-		nhr := parseNhr(data)
-		return nhr
+		req := parseNhr(data)
+		return req
 	case "vr_vrf_assign_req":
-		nhr := parseVar(data)
-		return nhr
+		req := parseVar(data)
+		return req
 	case "vr_mpls_req":
-		nhr := parseMr(data)
-		return nhr
+		req := parseMr(data)
+		return req
 	case "vr_vrf_stats_req":
-		nhr := parseVsr(data)
-		return nhr
+		req := parseVsr(data)
+		return req
+	case "vr_mirror_req":
+		req := parseMirr(data)
+		return req
 	default:
 		return nil
 	}
@@ -125,8 +128,8 @@ func parseVsr(b []byte) *vr.VrVrfStatsReq {
 	req.VsrGreMplsTunnels = int64(binary.LittleEndian.Uint64(b[80:88]))
 	req.VsrL2Encaps = int64(binary.LittleEndian.Uint64(b[88:96]))
 	req.VsrEncaps = int64(binary.LittleEndian.Uint64(b[96:104]))
-	// _ = int16(binary.LittleEndian.Uint16(b[112:118])) // pad2
-	req.VsrMarker = int16(binary.LittleEndian.Uint16(b[104:112]))
+	// _ = int16(binary.LittleEndian.Uint16(b[104:110])) // pad2
+	req.VsrMarker = int16(binary.LittleEndian.Uint16(b[110:112]))
 	req.VsrGros = int64(binary.LittleEndian.Uint64(b[112:120]))
 	req.VsrDiags = int64(binary.LittleEndian.Uint64(b[120:128]))
 	req.VsrEncapComposites = int64(binary.LittleEndian.Uint64(b[128:136]))
@@ -143,6 +146,22 @@ func parseVsr(b []byte) *vr.VrVrfStatsReq {
 	req.VsrUucFloods = int64(binary.LittleEndian.Uint64(b[216:224]))
 	req.VsrPbbTunnels = int64(binary.LittleEndian.Uint64(b[224:232]))
 	req.VsrUDPMplsOverMplsTunnels = int64(binary.LittleEndian.Uint64(b[232:240]))
+
+	return req
+}
+
+func parseMirr(b []byte) *vr.VrMirrorReq {
+	req := vr.NewVrMirrorReq()
+	req.HOp = vr.SandeshOp(b[0:4][0])
+	req.MirrIndex = int16(binary.LittleEndian.Uint16(b[4:6]))
+	req.MirrRid = int16(binary.LittleEndian.Uint16(b[6:8]))
+	req.MirrNhid = int32(binary.LittleEndian.Uint32(b[8:12]))
+	req.MirrUsers = int32(binary.LittleEndian.Uint32(b[12:16]))
+	req.MirrFlags = int32(binary.LittleEndian.Uint32(b[16:20]))
+	req.MirrMarker = int32(binary.LittleEndian.Uint32(b[20:24]))
+	req.MirrVni = int32(binary.LittleEndian.Uint32(b[24:28]))
+	// int32(binary.LittleEndian.Uint32(b[28:30])) // pad
+	req.MirrVlan = int16(binary.LittleEndian.Uint16(b[30:32]))
 
 	return req
 }

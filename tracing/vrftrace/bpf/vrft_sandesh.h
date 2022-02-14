@@ -120,6 +120,7 @@ struct mirr {
   int32_t mirr_flags;
   int32_t mirr_marker;
   int32_t mirr_vni;
+  uint8_t pad[2];
   int16_t mirr_vlan;
 };
 
