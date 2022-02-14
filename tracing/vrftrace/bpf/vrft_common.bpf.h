@@ -6,6 +6,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
+#include <bpf/bpf_endian.h>
 
 #include "vrft_sandesh.h"
 #include "vrouter.h"
@@ -21,12 +22,18 @@ static uint64_t get_func_ip(void *ctx);
         &req->FIELD           \
     );
 
-#define READ_KERNEL_STR(FIELD)    \
-    bpf_probe_read_kernel_str(    \
-        &s_req.FIELD,         \
-        sizeof(s_req.FIELD),  \
-        &req->FIELD           \
+#define READ_KERNEL_STR(FIELD)  \
+    bpf_probe_read_kernel_str(  \
+        &s_req.FIELD,           \
+        sizeof(s_req.FIELD),    \
+        &req->FIELD             \
     );
+
+#define SREQ_NTOHL(FIELD) \
+    s_req.FIELD = bpf_ntohl(s_req.FIELD);
+
+#define SREQ_NTOHS(FIELD) \
+    s_req.FIELD = bpf_ntohs(s_req.FIELD);
 
 struct vrft_event {
     uint64_t tstamp;
@@ -396,11 +403,24 @@ vr_flow_body(void *ctx, int8_t is_return, vr_flow_req *req) {
     READ_KERNEL(fr_rflow_nh_id);
     READ_KERNEL(fr_rflow_sport);
     READ_KERNEL(fr_rflow_dport);
-    READ_KERNEL(fr_qos_id);
     READ_KERNEL(fr_ttl);
     READ_KERNEL(fr_extflags);
     READ_KERNEL(fr_flags1);
+    READ_KERNEL(fr_qos_id);
     READ_KERNEL(fr_underlay_ecmp_index);
+
+    SREQ_NTOHL(fr_flow_sip_u);
+    SREQ_NTOHL(fr_flow_sip_l);
+    SREQ_NTOHL(fr_flow_dip_u);
+    SREQ_NTOHL(fr_flow_dip_l);
+    SREQ_NTOHL(fr_rflow_sip_u);
+    SREQ_NTOHL(fr_rflow_sip_l);
+    SREQ_NTOHL(fr_rflow_dip_u);
+    SREQ_NTOHL(fr_rflow_dip_l);
+    SREQ_NTOHS(fr_flow_sport);
+    SREQ_NTOHS(fr_flow_dport);
+    SREQ_NTOHS(fr_rflow_sport);
+    SREQ_NTOHS(fr_rflow_dport);
 
     bpf_map_update_elem(&vr_flow_req_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
@@ -604,8 +624,6 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
     READ_KERNEL(btable_size);
     READ_KERNEL(btable_dev);
     READ_KERNEL_STR(btable_file_path);
-
-    bpf_printk("path: %s\n", s_req.btable_file_path);
 
     bpf_map_update_elem(&vr_bridge_table_data_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);

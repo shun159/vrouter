@@ -30,6 +30,9 @@ func parseSreq(perf PerfEvent, data []byte) vr.Sandesh {
 	case "vr_mirror_req":
 		req := parseMirr(data)
 		return req
+	case "vr_flow_req":
+		req := parseFr(data)
+		return req
 	default:
 		return nil
 	}
@@ -162,6 +165,55 @@ func parseMirr(b []byte) *vr.VrMirrorReq {
 	req.MirrVni = int32(binary.LittleEndian.Uint32(b[24:28]))
 	// int32(binary.LittleEndian.Uint32(b[28:30])) // pad
 	req.MirrVlan = int16(binary.LittleEndian.Uint16(b[30:32]))
+
+	return req
+}
+
+func parseFr(b []byte) *vr.VrFlowReq {
+	req := vr.NewVrFlowReq()
+	req.FrOp = vr.FlowOp(b[0:4][0])
+	// b[4:6] // pad
+	req.FrRid = int16(binary.LittleEndian.Uint16(b[6:8]))
+	req.FrIndex = int32(binary.LittleEndian.Uint32(b[8:12]))
+	req.FrAction = int16(binary.LittleEndian.Uint16(b[12:14]))
+	req.FrFlags = int16(binary.LittleEndian.Uint16(b[14:16]))
+	req.FrRindex = int32(binary.LittleEndian.Uint32(b[16:20]))
+	req.FrFamily = int32(binary.LittleEndian.Uint32(b[20:24]))
+	req.FrFlowSipU = int64(binary.LittleEndian.Uint64(b[24:32]))
+	req.FrFlowSipL = int64(binary.LittleEndian.Uint64(b[32:40]))
+	req.FrFlowDipU = int64(binary.LittleEndian.Uint64(b[40:48]))
+	req.FrFlowDipL = int64(binary.LittleEndian.Uint64(b[48:56]))
+	req.FrFlowSport = int16(binary.LittleEndian.Uint16(b[56:58]))
+	req.FrFlowDport = int16(binary.LittleEndian.Uint16(b[58:60]))
+	// b[60:63] // pad
+	req.FrFlowProto = int8(b[63:64][0])
+	req.FrFlowVrf = int16(binary.LittleEndian.Uint16(b[64:66]))
+	req.FrFlowDvrf = int16(binary.LittleEndian.Uint16(b[66:68]))
+	req.FrMirID = int16(binary.LittleEndian.Uint16(b[68:70]))
+	req.FrSecMirID = int16(binary.LittleEndian.Uint16(b[70:72]))
+	req.FrMirSip = int32(binary.LittleEndian.Uint32(b[72:76]))
+	req.FrMirSport = int16(binary.LittleEndian.Uint16(b[76:78]))
+	req.FrMirVrf = int16(binary.LittleEndian.Uint16(b[78:80]))
+	req.FrEcmpNhIndex = int32(binary.LittleEndian.Uint32(b[80:84]))
+	req.FrSrcNhIndex = int32(binary.LittleEndian.Uint32(b[84:88]))
+	req.FrFlowNhID = int32(binary.LittleEndian.Uint32(b[88:92]))
+	req.FrDropReason = int16(binary.LittleEndian.Uint16(b[92:94]))
+	// b[94:95] // pad
+	req.FrGenID = int8(b[95:96][0])
+	req.FrRflowSipL = int64(binary.LittleEndian.Uint64(b[96:104]))
+	req.FrRflowSipU = int64(binary.LittleEndian.Uint64(b[104:112]))
+	req.FrRflowDipL = int64(binary.LittleEndian.Uint64(b[112:120]))
+	req.FrRflowDipU = int64(binary.LittleEndian.Uint64(b[120:128]))
+	req.FrRflowNhID = int32(binary.LittleEndian.Uint32(b[128:132]))
+	req.FrRflowSport = int16(binary.LittleEndian.Uint16(b[132:134]))
+	req.FrRflowDport = int16(binary.LittleEndian.Uint16(b[134:136]))
+	req.FrQosID = int16(binary.LittleEndian.Uint16(b[136:138]))
+	// b[138:143] //pad
+	req.FrTTL = int8(b[143:144][0])
+	req.FrExtflags = int16(binary.LittleEndian.Uint16(b[144:146]))
+	req.FrFlags = int16(binary.LittleEndian.Uint16(b[146:148]))
+	req.FrUnderlayEcmpIndex = int8(b[148:149][0])
+	// b[149:152] // pad
 
 	return req
 }

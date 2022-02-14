@@ -126,8 +126,8 @@ struct mirr {
 
 /* sandesh vr_flow_req */
 struct fr { 
-  /* public */
   flow_op fr_op;
+  uint8_t pad1[2];
   int16_t fr_rid;
   int32_t fr_index;
   int16_t fr_action;
@@ -140,6 +140,7 @@ struct fr {
   uint64_t fr_flow_dip_l;
   uint16_t fr_flow_sport;
   uint16_t fr_flow_dport;
+  uint8_t pad2[3];
   int8_t fr_flow_proto;
   uint16_t fr_flow_vrf;
   uint16_t fr_flow_dvrf;
@@ -152,6 +153,7 @@ struct fr {
   uint32_t fr_src_nh_index;
   uint32_t fr_flow_nh_id;
   uint16_t fr_drop_reason;
+  uint8_t pad3[1];
   int8_t fr_gen_id;
   uint64_t fr_rflow_sip_u;
   uint64_t fr_rflow_sip_l;
@@ -161,10 +163,12 @@ struct fr {
   uint16_t fr_rflow_sport;
   uint16_t fr_rflow_dport;
   uint16_t fr_qos_id;
+  uint8_t pad4[5];
   int8_t fr_ttl;
   int16_t fr_extflags;
   int16_t fr_flags1;
   int8_t fr_underlay_ecmp_index;
+  uint8_t pad5[3];
 };
 
 /* sandesh vr_response */

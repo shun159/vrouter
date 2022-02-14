@@ -26,7 +26,7 @@ package main
 #include <bpf/btf.h>
 #include <bpf/libbpf.h>
 
-#define MAX_POS 10
+#define MAX_POS 5
 
 static const char *s_structs[] = {
     //
@@ -53,7 +53,7 @@ static const char *s_structs[] = {
     "vr_flow_response",
     "vr_bridge_table_data",
     "vr_hugepage_config",
-    "vr_vrf_req",
+    "vr_vrf_req"
     //"vr_packet",
     //"sk_buff",
 };
@@ -141,6 +141,8 @@ btf_find_sandesh_pos(const struct btf *btf, const struct btf_type *t) {
 
         t = btf__type_by_id(btf, t->type);
         st_name = btf__str_by_offset(btf, t->name_off);
+				if (strcmp(st_name, "vr_flow_req") == 0)
+					fprintf(stdout, "stname: %s\n", st_name);
         stype = sname_type(st_name);
         if (stype < 0)
           continue;
@@ -291,7 +293,7 @@ func (s *SymsDB) fillSymInfo(traceOpt string) error {
 				pos := uint16(stype_pos & 0x00ff)
 				sname := C.GoString(C.sname_by_idx(stype_pos >> 8))
 				syminfo := SymInfo{Pos: pos, Sname: sname}
-				fmt.Printf("fname: %s sym: %+v\n", fname, syminfo)
+				//fmt.Printf("fname: %s sym: %+v\n", fname, syminfo)
 				s.SymInfo[fname] = syminfo
 			} else {
 				continue
