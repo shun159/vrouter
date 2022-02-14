@@ -199,7 +199,6 @@ incr_monotonic_counter(uint32_t key) {
 
 static __inline int
 vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
-    struct vrft_event e = {0};
     struct vifr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -228,7 +227,6 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
 
 static __inline int
 vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
-    struct vrft_event e = {0};
     struct rtr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -246,7 +244,6 @@ vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
 
 static __inline int
 vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
-    struct vrft_event e = {0};
     struct nhr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -264,7 +261,6 @@ vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
 
 static __inline int
 vr_vrf_assign_body(void *ctx, int8_t is_return, vr_vrf_assign_req *req) {
-    struct vrft_event e = {0};
     struct var s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -283,7 +279,6 @@ vr_vrf_assign_body(void *ctx, int8_t is_return, vr_vrf_assign_req *req) {
 
 static __inline int
 vr_mpls_body(void *ctx, int8_t is_return, vr_mpls_req *req) {
-    struct vrft_event e = {0};
     struct mr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -300,7 +295,6 @@ vr_mpls_body(void *ctx, int8_t is_return, vr_mpls_req *req) {
 
 static __inline int
 vr_vrf_stats_body(void *ctx, int8_t is_return, vr_vrf_stats_req *req) {
-    struct vrft_event e = {0};
     struct vsr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -345,7 +339,6 @@ vr_vrf_stats_body(void *ctx, int8_t is_return, vr_vrf_stats_req *req) {
 
 static __inline int
 vr_mirror_body(void *ctx, int8_t is_return, vr_mirror_req *req) {
-    struct vrft_event e = {0};
     struct mirr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -366,7 +359,6 @@ vr_mirror_body(void *ctx, int8_t is_return, vr_mirror_req *req) {
 
 static __inline int
 vr_flow_body(void *ctx, int8_t is_return, vr_flow_req *req) {
-    struct vrft_event e = {0};
     struct fr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -429,7 +421,6 @@ vr_flow_body(void *ctx, int8_t is_return, vr_flow_req *req) {
 
 static __inline int
 vr_response_body(void *ctx, int8_t is_return, vr_response *req) {
-    struct vrft_event e = {0};
     struct resp s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -470,7 +461,6 @@ vr_flow_table_data_body(void *ctx, int8_t is_return, vr_flow_table_data *req) {
 
 static __inline int
 vr_vrf_body(void *ctx, int8_t is_return, vr_vrf_req *req) {
-    struct vrft_event e = {0};
     struct vrf s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -489,7 +479,6 @@ vr_vrf_body(void *ctx, int8_t is_return, vr_vrf_req *req) {
 
 static __inline int
 vr_vxlan_body(void *ctx, int8_t is_return, vr_vxlan_req *req) {
-    struct vrft_event e = {0};
     struct vxlanr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -505,7 +494,6 @@ vr_vxlan_body(void *ctx, int8_t is_return, vr_vxlan_req *req) {
 
 static __inline int
 vr_fc_map_body(void *ctx, int8_t is_return, vr_fc_map_req *req) {
-    struct vrft_event e = {0};
     struct fmr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -525,7 +513,6 @@ vr_fc_map_body(void *ctx, int8_t is_return, vr_fc_map_req *req) {
 
 static __inline int
 vr_qos_map_body(void *ctx, int8_t is_return, vr_qos_map_req *req) {
-    struct vrft_event e = {0};
     struct qmr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -547,7 +534,6 @@ vr_qos_map_body(void *ctx, int8_t is_return, vr_qos_map_req *req) {
 
 static __inline int
 vr_drop_stats_body(void *ctx, int8_t is_return, vr_drop_stats_req *req) {
-    struct vrft_event e = {0};
     struct vds s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -615,7 +601,6 @@ vr_drop_stats_body(void *ctx, int8_t is_return, vr_drop_stats_req *req) {
 
 static __inline int
 vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req) {
-    struct vrft_event e = {0};
     struct btable s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
