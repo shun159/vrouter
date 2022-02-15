@@ -8,16 +8,6 @@ import (
 	"unsafe"
 )
 
-type PerfEvent struct {
-	Tstamp      uint64
-	Faddr       uint64
-	ProcessorId uint32
-	IsReturn    uint8
-	Idx         uint64
-	Fname       string
-	Sname       string
-}
-
 func perfMapCb(symdb *SymsDB) chan []byte {
 	e := make(chan []byte, 1000)
 	go func() {

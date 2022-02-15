@@ -1,11 +1,20 @@
 package main
 
-import "C"
 import (
 	"encoding/binary"
 
 	"github.com/shun159/vrftrace/vr"
 )
+
+type PerfEvent struct {
+	Tstamp      uint64
+	Faddr       uint64
+	ProcessorId uint32
+	IsReturn    uint8
+	Idx         uint64
+	Fname       string
+	Sname       string
+}
 
 func parsePerfEvent(b []byte, symdb SymsDB) PerfEvent {
 	perf := PerfEvent{}
@@ -100,6 +109,7 @@ func parseVifr(b []byte) *vr.VrInterfaceReq {
 	req.VifrNhID = int32(binary.LittleEndian.Uint32(b[68:72]))
 	// b[72:79] // pad
 	req.VifrTransport = int8(b[79:80][0])
+	req.VifrName = string(b[80:96])
 
 	return req
 }

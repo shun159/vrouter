@@ -23,10 +23,16 @@ static uint64_t get_func_ip(void *ctx);
     );
 
 #define READ_KERNEL_STR(FIELD)  \
+    char *FIELD;                \
+    bpf_probe_read_kernel(      \
+        &FIELD,                 \
+        sizeof(FIELD),          \
+        &req->FIELD             \
+    );                          \
     bpf_probe_read_kernel_str(  \
         &s_req.FIELD,           \
         sizeof(s_req.FIELD),    \
-        &req->FIELD             \
+        FIELD                   \
     );
 
 #define SREQ_NTOHL(FIELD) \
@@ -219,6 +225,7 @@ vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
     READ_KERNEL(vifr_vlan_id);
     READ_KERNEL(vifr_nh_id);
     READ_KERNEL(vifr_transport);
+    READ_KERNEL_STR(vifr_name);
 
     bpf_map_update_elem(&vr_interface_req_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);

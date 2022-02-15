@@ -27,6 +27,7 @@ struct vifr {
   int32_t vifr_nh_id;
   uint8_t pad2[7];
   int8_t vifr_transport;
+  char vifr_name[IFNAMSIZ];
 };
 
 /* sandesh vr_nexthop_req */
