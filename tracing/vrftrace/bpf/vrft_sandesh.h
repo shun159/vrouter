@@ -22,8 +22,10 @@ struct vifr {
   uint32_t vifr_ip;
   uint64_t vifr_ip6_u;
   uint64_t vifr_ip6_l;
+  uint8_t pad1[2];
   int16_t vifr_vlan_id;
   int32_t vifr_nh_id;
+  uint8_t pad2[7];
   int8_t vifr_transport;
 };
 
@@ -199,6 +201,7 @@ struct ftable {
 /* sandesh vr_vrf_req */
 struct vrf { 
   sandesh_op h_op;
+  uint8_t pad[2];
   int16_t vrf_rid;
   int32_t vrf_idx;
   int32_t vrf_flags;
@@ -210,6 +213,7 @@ struct vrf {
 /* sandesh vr_vxlan_req */
 struct vxlanr { 
   sandesh_op h_op;
+  uint8_t pad[2];
   int16_t vxlanr_rid;
   int32_t vxlanr_vnid;
   int32_t vxlanr_nhid;
@@ -219,25 +223,16 @@ struct vxlanr {
 struct fmr { 
   sandesh_op h_op;
   uint16_t fmr_rid;
-  u_int32_t fmr_id_size;
-  u_int32_t fmr_dscp_size;
-  u_int32_t fmr_mpls_qos_size;
-  u_int32_t fmr_dotonep_size;
-  u_int32_t fmr_queue_id_size;
   int16_t fmr_marker;
-};
+  uint8_t pad[8];
+ };
 
 /* sandesh vr_qos_map_req */
 struct qmr { 
   sandesh_op h_op;
   uint16_t qmr_rid;
   uint16_t qmr_id;
-  u_int32_t qmr_dscp_size;
-  u_int32_t qmr_dscp_fc_id_size;
-  u_int32_t qmr_mpls_qos_size;
-  u_int32_t qmr_mpls_qos_fc_id_size;
-  u_int32_t qmr_dotonep_size;
-  u_int32_t qmr_dotonep_fc_id_size;
+  uint8_t pad[6];
   int16_t qmr_marker;
 };
 
@@ -247,6 +242,7 @@ struct vds {
   int16_t vds_rid;
   int16_t vds_core;
   int64_t vds_discard;
+  uint8_t pad[7];
   int8_t vds_pcpu_stats_failure_status;
   int64_t vds_pull;
   int64_t vds_invalid_if;
@@ -306,7 +302,7 @@ struct btable {
   /* public */
   sandesh_op btable_op;
   uint16_t btable_rid;
-  uint32_t btable_size;
   uint16_t btable_dev;
-  char btable_file_path[255];
+  uint8_t pad[4];
+  uint32_t btable_size;
 };

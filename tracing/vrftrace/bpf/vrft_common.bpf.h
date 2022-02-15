@@ -499,11 +499,6 @@ vr_fc_map_body(void *ctx, int8_t is_return, vr_fc_map_req *req) {
 
     READ_KERNEL(h_op);
     READ_KERNEL(fmr_rid);
-    READ_KERNEL(fmr_id_size);
-    READ_KERNEL(fmr_dscp_size);
-    READ_KERNEL(fmr_mpls_qos_size);
-    READ_KERNEL(fmr_dotonep_size);
-    READ_KERNEL(fmr_queue_id_size);
     READ_KERNEL(fmr_marker);
 
     bpf_map_update_elem(&vr_fc_map_req_map, &idx, &s_req, BPF_ANY);
@@ -519,12 +514,6 @@ vr_qos_map_body(void *ctx, int8_t is_return, vr_qos_map_req *req) {
     READ_KERNEL(h_op);
     READ_KERNEL(qmr_rid);
     READ_KERNEL(qmr_id);
-    READ_KERNEL(qmr_dscp_size);
-    READ_KERNEL(qmr_dscp_fc_id_size);
-    READ_KERNEL(qmr_mpls_qos_size);
-    READ_KERNEL(qmr_mpls_qos_fc_id_size);
-    READ_KERNEL(qmr_dotonep_size);
-    READ_KERNEL(qmr_dotonep_fc_id_size);
     READ_KERNEL(qmr_marker);
 
     bpf_map_update_elem(&vr_qos_map_req_map, &idx, &s_req, BPF_ANY);
@@ -606,9 +595,8 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
 
     READ_KERNEL(btable_op);
     READ_KERNEL(btable_rid);
-    READ_KERNEL(btable_size);
     READ_KERNEL(btable_dev);
-    READ_KERNEL_STR(btable_file_path);
+    READ_KERNEL(btable_size);
 
     bpf_map_update_elem(&vr_bridge_table_data_map, &idx, &s_req, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
