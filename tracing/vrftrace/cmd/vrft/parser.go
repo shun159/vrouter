@@ -33,6 +33,12 @@ func parseSreq(perf PerfEvent, data []byte) vr.Sandesh {
 	case "vr_flow_req":
 		req := parseFr(data)
 		return req
+	case "vr_response":
+		req := parseResp(data)
+		return req
+	case "vr_flow_table_data":
+		req := parseFtable(data)
+		return req
 	default:
 		return nil
 	}
@@ -214,6 +220,35 @@ func parseFr(b []byte) *vr.VrFlowReq {
 	req.FrFlags = int16(binary.LittleEndian.Uint16(b[146:148]))
 	req.FrUnderlayEcmpIndex = int8(b[148:149][0])
 	// b[149:152] // pad
+
+	return req
+}
+
+func parseResp(b []byte) *vr.VrResponse {
+	req := vr.NewVrResponse()
+	req.HOp = vr.SandeshOp(b[0:4][0])
+	req.RespCode = int32(binary.LittleEndian.Uint32(b[4:8]))
+
+	return req
+}
+
+func parseFtable(b []byte) *vr.VrFlowTableData {
+	req := vr.NewVrFlowTableData()
+	req.FtableOp = vr.FlowOp(b[0:4][0])
+	req.FtableRid = int16(binary.LittleEndian.Uint16(b[4:6]))
+	req.FtableDev = int16(binary.LittleEndian.Uint16(b[6:8]))
+	req.FtableUsedEntries = int64(binary.LittleEndian.Uint64(b[8:16]))
+	req.FtableProcessed = int64(binary.LittleEndian.Uint64(b[16:24]))
+	req.FtableDeleted = int64(binary.LittleEndian.Uint64(b[24:32]))
+	req.FtableAdded = int64(binary.LittleEndian.Uint64(b[32:40]))
+	req.FtableCreated = int64(binary.LittleEndian.Uint64(b[40:48]))
+	req.FtableChanged = int64(binary.LittleEndian.Uint64(b[48:56]))
+	req.FtableSize = int32(binary.LittleEndian.Uint32(b[56:60]))
+	req.FtableHoldEntries = int32(binary.LittleEndian.Uint32(b[60:64]))
+	req.FtableCpus = int32(binary.LittleEndian.Uint32(b[64:68]))
+	req.FtableOflowEntries = int32(binary.LittleEndian.Uint32(b[68:72]))
+	req.FtableBurstFreeTokens = int32(binary.LittleEndian.Uint32(b[72:76]))
+	req.FtableHoldEntries = int32(binary.LittleEndian.Uint32(b[76:80]))
 
 	return req
 }

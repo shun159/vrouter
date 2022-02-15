@@ -179,10 +179,8 @@ struct resp {
 
 /* sandesh vr_flow_table_data */
 struct ftable { 
-  /* public */
   flow_op ftable_op;
   uint16_t ftable_rid;
-  uint32_t ftable_size;
   uint16_t ftable_dev;
   uint64_t ftable_used_entries;
   uint64_t ftable_processed;
@@ -190,6 +188,7 @@ struct ftable {
   uint64_t ftable_added;
   uint64_t ftable_created;
   uint64_t ftable_changed;
+  uint32_t ftable_size;
   uint32_t ftable_hold_oflows;
   uint32_t ftable_cpus;
   uint32_t ftable_oflow_entries;
@@ -199,7 +198,6 @@ struct ftable {
 
 /* sandesh vr_vrf_req */
 struct vrf { 
-  /* public */
   sandesh_op h_op;
   int16_t vrf_rid;
   int32_t vrf_idx;
