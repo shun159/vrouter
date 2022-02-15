@@ -7,6 +7,23 @@ import (
 	"github.com/shun159/vrftrace/vr"
 )
 
+func parsePerfEvent(b []byte, symdb SymsDB) PerfEvent {
+	perf := PerfEvent{}
+	perf.Tstamp = binary.LittleEndian.Uint64(b[0:8])
+	perf.Faddr = binary.LittleEndian.Uint64(b[8:16])
+	perf.ProcessorId = binary.LittleEndian.Uint32(b[16:20])
+	perf.IsReturn = b[20:21][0]
+	_ = b[21:24] // _pad[3]
+	perf.Idx = binary.LittleEndian.Uint64(b[24:32])
+	if s, ok := symdb.Address[perf.Faddr]; ok {
+		perf.Fname = s
+		if syminfo, ok := symdb.SymInfo[perf.Fname]; ok {
+			perf.Sname = syminfo.Sname
+		}
+	}
+	return perf
+}
+
 func parseSreq(perf PerfEvent, data []byte) vr.Sandesh {
 	switch perf.Sname {
 	case "vr_interface_req":

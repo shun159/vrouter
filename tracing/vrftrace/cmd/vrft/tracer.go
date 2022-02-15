@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -17,23 +16,6 @@ type PerfEvent struct {
 	Idx         uint64
 	Fname       string
 	Sname       string
-}
-
-func parsePerfEvent(b []byte, symdb SymsDB) PerfEvent {
-	perf := PerfEvent{}
-	perf.Tstamp = binary.LittleEndian.Uint64(b[0:8])
-	perf.Faddr = binary.LittleEndian.Uint64(b[8:16])
-	perf.ProcessorId = binary.LittleEndian.Uint32(b[16:20])
-	perf.IsReturn = b[20:21][0]
-	_ = b[21:24] // _pad[3]
-	perf.Idx = binary.LittleEndian.Uint64(b[24:32])
-	if s, ok := symdb.Address[perf.Faddr]; ok {
-		perf.Fname = s
-		if syminfo, ok := symdb.SymInfo[perf.Fname]; ok {
-			perf.Sname = syminfo.Sname
-		}
-	}
-	return perf
 }
 
 func perfMapCb(symdb *SymsDB) chan []byte {
@@ -54,6 +36,8 @@ func perfMapCb(symdb *SymsDB) chan []byte {
 			if err != nil {
 				fmt.Printf("map error: %+v\n", err)
 				continue
+			} else {
+				bpfmap.DeleteKey(unsafe.Pointer(&idx))
 			}
 
 			if req := parseSreq(perf, data); req != nil {
