@@ -2,35 +2,40 @@
 
 #include <stdint.h>
 #include <linux/types.h>
+#include <linux/ip.h>
 #include <uapi/linux/bpf.h>
+
+#undef container_of
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_endian.h>
 
 #include "vrft_sandesh.h"
-#include "vrouter.h"
+#include "vr_packet.h"
 
 #define __unused __attribute__((unused))
 
+typedef struct vr_packet vr_packet;
+
 static uint64_t get_func_ip(void *ctx);
 
-#define READ_KERNEL(FIELD)    \
-    bpf_probe_read_kernel(    \
-        &s_req.FIELD,         \
-        sizeof(s_req.FIELD),  \
-        &req->FIELD           \
+#define READ_KERNEL(FIELD)      \
+    bpf_probe_read(             \
+        (void *)&s_req.FIELD,   \
+        sizeof(s_req.FIELD),    \
+        &req->FIELD             \
     );
 
 #define READ_KERNEL_STR(FIELD)  \
     char *FIELD;                \
-    bpf_probe_read_kernel(      \
-        &FIELD,                 \
+    bpf_probe_read(             \
+        (void *)&FIELD,         \
         sizeof(FIELD),          \
         &req->FIELD             \
     );                          \
-    bpf_probe_read_kernel_str(  \
-        &s_req.FIELD,           \
+    bpf_probe_read_str(         \
+        (void *)&s_req.FIELD,   \
         sizeof(s_req.FIELD),    \
         FIELD                   \
     );
@@ -175,6 +180,13 @@ struct {
     __type(value, struct btable);
 } vr_bridge_table_data_map SEC(".maps");
 
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries,  10240);
+    __type(key, uint64_t);
+    __type(value, struct btable);
+} vr_packet_map SEC(".maps");
+
 static __inline int
 emit_vrft_event(void *ctx, int8_t is_return, uint64_t index) {
    struct vrft_event e = {0};
@@ -194,7 +206,7 @@ incr_monotonic_counter(uint32_t key) {
 
     if (value) {
         uint64_t ret = *value;
-        __sync_fetch_and_add(value, 1);
+        (void)__sync_fetch_and_add(value, 1);
         return ret;
     }
     else {
@@ -204,9 +216,10 @@ incr_monotonic_counter(uint32_t key) {
 }
 
 static __inline int
-vr_interface_body(void *ctx, int8_t is_return, vr_interface_req *req) {
+vr_interface_body(void *ctx, int8_t is_return, struct _vr_interface_req *req) {
     struct vifr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
+    bpf_probe_read((void *)&s_req.h_op, sizeof(s_req.h_op), (void *)1);
 
     READ_KERNEL(h_op);
     READ_KERNEL(vifr_core);
@@ -606,6 +619,32 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
     READ_KERNEL(btable_size);
 
     bpf_map_update_elem(&vr_bridge_table_data_map, &idx, &s_req, BPF_ANY);
+    emit_vrft_event(ctx, is_return, idx);
+    return 0;
+}
+
+#define CONTAINER_OF(member, struct_type, pointer) \
+    ((struct_type *)((uintptr_t)pointer - \
+                (uintptr_t)&(((struct_type *)0)->member)))
+
+static __inline int
+vr_packet_body(void *ctx, int8_t is_return, struct vr_packet *req) {
+    struct vr_packet s_req = {0};
+    uint64_t idx = incr_monotonic_counter(0);
+    unsigned char *vp_head;
+    unsigned char vp_type;
+    unsigned short vp_data;
+    unsigned short eth_proto;
+    struct vr_eth *eth;
+
+    READ_KERNEL(vp_head);
+    READ_KERNEL(vp_data);
+    READ_KERNEL(vp_type);
+    eth = (struct  vr_eth *)(s_req.vp_head + s_req.vp_data);
+    
+    bpf_probe_read_kernel(&eth_proto, sizeof(eth_proto), &eth->eth_proto);
+    bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
+
     emit_vrft_event(ctx, is_return, idx);
     return 0;
 }

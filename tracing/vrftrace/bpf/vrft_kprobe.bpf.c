@@ -56,3 +56,4 @@ KPROBE(vr_fc_map_req, vr_fc_map_body);
 KPROBE(vr_qos_map_req, vr_qos_map_body);
 KPROBE(vr_drop_stats_req, vr_drop_stats_body);
 KPROBE(vr_bridge_table_data, vr_bridge_table_data_body);
+KPROBE(vr_packet, vr_packet_body);

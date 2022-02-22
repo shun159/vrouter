@@ -53,8 +53,8 @@ static const char *s_structs[] = {
     "vr_flow_response",
     "vr_bridge_table_data",
     "vr_hugepage_config",
-    "vr_vrf_req"
-    //"vr_packet",
+    "vr_vrf_req",
+    "vr_packet",
     //"sk_buff",
 };
 static size_t s_structs_len = sizeof s_structs / sizeof s_structs[0];

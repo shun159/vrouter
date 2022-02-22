@@ -30,6 +30,7 @@ var sandeshStructs = []string{
 	"vr_qos_map_req",
 	"vr_drop_stats_req",
 	"vr_bridge_table_data",
+	"vr_packet",
 }
 var progNames = []string{}
 var progDb = make(map[string]*bpf.BPFProg)
