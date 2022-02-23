@@ -623,27 +623,55 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
     return 0;
 }
 
-#define CONTAINER_OF(member, struct_type, pointer) \
-    ((struct_type *)((uintptr_t)pointer - \
-                (uintptr_t)&(((struct_type *)0)->member)))
-
 static __inline int
 vr_packet_body(void *ctx, int8_t is_return, struct vr_packet *req) {
     struct vr_packet s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
-    unsigned char *vp_head;
-    unsigned char vp_type;
-    unsigned short vp_data;
+
+    unsigned char eth_dmac[VR_ETHER_ALEN] = {0};
+    unsigned char eth_smac[VR_ETHER_ALEN] = {0};
     unsigned short eth_proto;
-    struct vr_eth *eth;
 
     READ_KERNEL(vp_head);
     READ_KERNEL(vp_data);
     READ_KERNEL(vp_type);
-    eth = (struct  vr_eth *)(s_req.vp_head + s_req.vp_data);
+
+    struct vr_eth *eth = (struct  vr_eth *)(s_req.vp_head + s_req.vp_data);
     
     bpf_probe_read_kernel(&eth_proto, sizeof(eth_proto), &eth->eth_proto);
-    bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
+    bpf_probe_read_kernel(&eth_dmac, VR_ETHER_ALEN, &eth->eth_dmac);
+    bpf_probe_read_kernel(&eth_smac, VR_ETHER_ALEN, &eth->eth_smac);
+
+    // For debugging
+    switch (s_req.vp_type) {
+    case VP_TYPE_ARP:
+        bpf_printk("ARP packet received\n");
+        break;
+    case VP_TYPE_IP:
+        bpf_printk("IPv4 packet received\n");
+        break;
+    case VP_TYPE_IP6:
+        bpf_printk("IPv6 packet received\n");
+        break;
+    case VP_TYPE_IPOIP:
+        bpf_printk("IPv4overIPv4 packet received\n");
+        break;
+    case VP_TYPE_IP6OIP:
+        bpf_printk("IPv4overIPv6 packet received\n");
+        break;
+    case VP_TYPE_AGENT:
+        bpf_printk("vrouter agent packet received\n");
+        break;
+    case VP_TYPE_PBB:
+        bpf_printk("PBB packet received\n");
+        break;
+    default:
+        bpf_printk("Unknown Type received: %d\n", s_req.vp_type);
+    }
+
+    //bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
+    //bpf_printk("ether_dmac: %02x:%02x:%02x\n", eth_dmac[3], eth_dmac[4], eth_dmac[5]);
+    //bpf_printk("ether_smac: %p\n", eth_smac[0], eth_smac[1], eth_smac[2], eth_smac[3], eth_smac[4], eth_smac[5]);
 
     emit_vrft_event(ctx, is_return, idx);
     return 0;
