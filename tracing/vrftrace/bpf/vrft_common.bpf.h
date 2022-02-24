@@ -5,218 +5,22 @@
 #include <linux/ip.h>
 #include <uapi/linux/bpf.h>
 
-#undef container_of
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_endian.h>
 
-#include "vrft_sandesh.h"
 #include "vr_packet.h"
+#include "vrft_sandesh.h"
+#include "vrft_maps.h"
+#include "vrft_utils.h"
 
 #define __unused __attribute__((unused))
 
 typedef struct vr_packet vr_packet;
 
-static uint64_t get_func_ip(void *ctx);
-
-#define READ_KERNEL(FIELD)      \
-    bpf_probe_read(             \
-        (void *)&s_req.FIELD,   \
-        sizeof(s_req.FIELD),    \
-        &req->FIELD             \
-    );
-
-#define READ_KERNEL_STR(FIELD)  \
-    char *FIELD;                \
-    bpf_probe_read(             \
-        (void *)&FIELD,         \
-        sizeof(FIELD),          \
-        &req->FIELD             \
-    );                          \
-    bpf_probe_read_str(         \
-        (void *)&s_req.FIELD,   \
-        sizeof(s_req.FIELD),    \
-        FIELD                   \
-    );
-
-#define SREQ_NTOHL(FIELD) \
-    s_req.FIELD = bpf_ntohl(s_req.FIELD);
-
-#define SREQ_NTOHS(FIELD) \
-    s_req.FIELD = bpf_ntohs(s_req.FIELD);
-
-struct vrft_event {
-    uint64_t tstamp;
-    uint64_t faddr;
-    uint32_t processor_id;
-    uint8_t is_return;
-    uint8_t __pad1[3];
-    uint64_t index;
-};
-
-struct {
-    __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-    __uint(key_size, sizeof(uint32_t));
-    __uint(value_size, sizeof(uint32_t));
-} events SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_ARRAY);
-    __uint(max_entries, 10240);
-    __type(key, uint32_t);
-    __type(value, uint64_t);
-} sreq_index SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vifr);
-} vr_interface_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct nhr);
-} vr_nexthop_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct rtr);
-} vr_route_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct var);
-} vr_vrf_assign_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct mr);
-} vr_mpls_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vsr);
-} vr_vrf_stats_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct mirr);
-} vr_mirror_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct fr);
-} vr_flow_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct resp);
-} vr_response_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct ftable);
-} vr_flow_table_data_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vrf);
-} vr_vrf_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vxlanr);
-} vr_vxlan_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vxlanr);
-} vr_fc_map_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct qmr);
-} vr_qos_map_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct vds);
-} vr_drop_stats_req_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct btable);
-} vr_bridge_table_data_map SEC(".maps");
-
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries,  10240);
-    __type(key, uint64_t);
-    __type(value, struct btable);
-} vr_packet_map SEC(".maps");
-
 static __inline int
-emit_vrft_event(void *ctx, int8_t is_return, uint64_t index) {
-   struct vrft_event e = {0};
-    e.tstamp = bpf_ktime_get_ns();
-    e.faddr = get_func_ip(ctx);
-    e.processor_id = bpf_get_smp_processor_id();
-    e.is_return = is_return;
-    e.index = index;
-    bpf_perf_event_output(ctx, &events, BPF_F_CURRENT_CPU, &e, sizeof(e));
-    return 0;
-}
-
-static __inline uint64_t
-incr_monotonic_counter(uint32_t key) {
-    uint64_t init_val = 0;
-    uint64_t *value = bpf_map_lookup_elem(&sreq_index, &key);
-
-    if (value) {
-        uint64_t ret = *value;
-        (void)__sync_fetch_and_add(value, 1);
-        return ret;
-    }
-    else {
-        bpf_map_update_elem(&sreq_index, &key, &init_val, BPF_ANY);
-        return 0;
-    }
-}
-
-static __inline int
-vr_interface_body(void *ctx, int8_t is_return, struct _vr_interface_req *req) {
+handle_vr_interface(void *ctx, int8_t is_return, struct _vr_interface_req *req) {
     struct vifr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
     bpf_probe_read((void *)&s_req.h_op, sizeof(s_req.h_op), (void *)1);
@@ -246,7 +50,7 @@ vr_interface_body(void *ctx, int8_t is_return, struct _vr_interface_req *req) {
 }
 
 static __inline int
-vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
+handle_vr_route(void *ctx, int8_t is_return, vr_route_req *req) {
     struct rtr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -263,7 +67,7 @@ vr_route_body(void *ctx, int8_t is_return, vr_route_req *req) {
 }
 
 static __inline int
-vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
+handle_vr_nexthop(void *ctx, int8_t is_return, vr_nexthop_req *req) {
     struct nhr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -280,7 +84,7 @@ vr_nexthop_body(void *ctx, int8_t is_return, vr_nexthop_req *req) {
 }
 
 static __inline int
-vr_vrf_assign_body(void *ctx, int8_t is_return, vr_vrf_assign_req *req) {
+handle_vr_vrf_assign(void *ctx, int8_t is_return, vr_vrf_assign_req *req) {
     struct var s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -298,7 +102,7 @@ vr_vrf_assign_body(void *ctx, int8_t is_return, vr_vrf_assign_req *req) {
 }
 
 static __inline int
-vr_mpls_body(void *ctx, int8_t is_return, vr_mpls_req *req) {
+handle_vr_mpls(void *ctx, int8_t is_return, vr_mpls_req *req) {
     struct mr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -314,7 +118,7 @@ vr_mpls_body(void *ctx, int8_t is_return, vr_mpls_req *req) {
 }
 
 static __inline int
-vr_vrf_stats_body(void *ctx, int8_t is_return, vr_vrf_stats_req *req) {
+handle_vr_vrf_stats(void *ctx, int8_t is_return, vr_vrf_stats_req *req) {
     struct vsr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -358,7 +162,7 @@ vr_vrf_stats_body(void *ctx, int8_t is_return, vr_vrf_stats_req *req) {
 }
 
 static __inline int
-vr_mirror_body(void *ctx, int8_t is_return, vr_mirror_req *req) {
+handle_vr_mirror(void *ctx, int8_t is_return, vr_mirror_req *req) {
     struct mirr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -378,7 +182,7 @@ vr_mirror_body(void *ctx, int8_t is_return, vr_mirror_req *req) {
 }
 
 static __inline int
-vr_flow_body(void *ctx, int8_t is_return, vr_flow_req *req) {
+handle_vr_flow(void *ctx, int8_t is_return, vr_flow_req *req) {
     struct fr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -440,7 +244,7 @@ vr_flow_body(void *ctx, int8_t is_return, vr_flow_req *req) {
 }
 
 static __inline int
-vr_response_body(void *ctx, int8_t is_return, vr_response *req) {
+handle_vr_response(void *ctx, int8_t is_return, vr_response *req) {
     struct resp s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -453,7 +257,7 @@ vr_response_body(void *ctx, int8_t is_return, vr_response *req) {
 }
 
 static __inline int 
-vr_flow_table_data_body(void *ctx, int8_t is_return, vr_flow_table_data *req) {
+handle_vr_flow_table_data(void *ctx, int8_t is_return, vr_flow_table_data *req) {
     struct vrft_event e = {0};
     struct ftable s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
@@ -480,7 +284,7 @@ vr_flow_table_data_body(void *ctx, int8_t is_return, vr_flow_table_data *req) {
 }
 
 static __inline int
-vr_vrf_body(void *ctx, int8_t is_return, vr_vrf_req *req) {
+handle_vr_vrf(void *ctx, int8_t is_return, vr_vrf_req *req) {
     struct vrf s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -498,7 +302,7 @@ vr_vrf_body(void *ctx, int8_t is_return, vr_vrf_req *req) {
 }
 
 static __inline int
-vr_vxlan_body(void *ctx, int8_t is_return, vr_vxlan_req *req) {
+handle_vr_vxlan(void *ctx, int8_t is_return, vr_vxlan_req *req) {
     struct vxlanr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -513,7 +317,7 @@ vr_vxlan_body(void *ctx, int8_t is_return, vr_vxlan_req *req) {
 }
 
 static __inline int
-vr_fc_map_body(void *ctx, int8_t is_return, vr_fc_map_req *req) {
+handle_vr_fc_map(void *ctx, int8_t is_return, vr_fc_map_req *req) {
     struct fmr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -527,7 +331,7 @@ vr_fc_map_body(void *ctx, int8_t is_return, vr_fc_map_req *req) {
 }
 
 static __inline int
-vr_qos_map_body(void *ctx, int8_t is_return, vr_qos_map_req *req) {
+handle_vr_qos_map(void *ctx, int8_t is_return, vr_qos_map_req *req) {
     struct qmr s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -542,7 +346,7 @@ vr_qos_map_body(void *ctx, int8_t is_return, vr_qos_map_req *req) {
 }
 
 static __inline int
-vr_drop_stats_body(void *ctx, int8_t is_return, vr_drop_stats_req *req) {
+handle_vr_drop_stats(void *ctx, int8_t is_return, vr_drop_stats_req *req) {
     struct vds s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -609,7 +413,7 @@ vr_drop_stats_body(void *ctx, int8_t is_return, vr_drop_stats_req *req) {
 }
 
 static __inline int
-vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req) {
+handle_vr_bridge_table_data(void *ctx, int8_t is_return, vr_bridge_table_data *req) {
     struct btable s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -624,7 +428,7 @@ vr_bridge_table_data_body(void *ctx, int8_t is_return, vr_bridge_table_data *req
 }
 
 static __inline int
-vr_packet_body(void *ctx, int8_t is_return, struct vr_packet *req) {
+handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
     struct vr_packet s_req = {0};
     uint64_t idx = incr_monotonic_counter(0);
 

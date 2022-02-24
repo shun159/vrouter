@@ -40,20 +40,20 @@ int sname##5(struct pt_regs *ctx) {              \
     return processor(ctx, 0, req);               \
 }
 
-KPROBE(vr_interface_req, vr_interface_body);
-KPROBE(vr_route_req, vr_route_body);
-KPROBE(vr_nexthop_req, vr_nexthop_body);
-KPROBE(vr_vrf_assign_req, vr_vrf_assign_body);
-KPROBE(vr_mpls_req, vr_mpls_body);
-KPROBE(vr_vrf_stats_req, vr_vrf_stats_body);
-KPROBE(vr_mirror_req, vr_mirror_body);
-KPROBE(vr_flow_req, vr_flow_body);
-KPROBE(vr_response, vr_response_body);
-KPROBE(vr_flow_table_data, vr_flow_table_data_body);
-KPROBE(vr_vrf_req, vr_vrf_body);
-KPROBE(vr_vxlan_req, vr_vxlan_body);
-KPROBE(vr_fc_map_req, vr_fc_map_body);
-KPROBE(vr_qos_map_req, vr_qos_map_body);
-KPROBE(vr_drop_stats_req, vr_drop_stats_body);
-KPROBE(vr_bridge_table_data, vr_bridge_table_data_body);
-KPROBE(vr_packet, vr_packet_body);
+KPROBE(vr_interface_req, handle_vr_interface);
+KPROBE(vr_route_req, handle_vr_route);
+KPROBE(vr_nexthop_req, handle_vr_nexthop);
+KPROBE(vr_vrf_assign_req, handle_vr_vrf_assign);
+KPROBE(vr_mpls_req, handle_vr_mpls);
+KPROBE(vr_vrf_stats_req, handle_vr_vrf_stats);
+KPROBE(vr_mirror_req, handle_vr_mirror);
+KPROBE(vr_flow_req, handle_vr_flow);
+KPROBE(vr_response, handle_vr_response);
+KPROBE(vr_flow_table_data, handle_vr_flow_table_data);
+KPROBE(vr_vrf_req, handle_vr_vrf);
+KPROBE(vr_vxlan_req, handle_vr_vxlan);
+KPROBE(vr_fc_map_req, handle_vr_fc_map);
+KPROBE(vr_qos_map_req, handle_vr_qos_map);
+KPROBE(vr_drop_stats_req, handle_vr_drop_stats);
+KPROBE(vr_bridge_table_data, handle_vr_bridge_table_data);
+KPROBE(vr_packet, handle_vr_packet);
