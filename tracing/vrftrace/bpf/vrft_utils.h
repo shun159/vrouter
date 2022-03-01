@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BSD-2-Clause
+
 #define READ_KERNEL(FIELD)      \
     bpf_probe_read(             \
         (void *)&s_req.FIELD,   \

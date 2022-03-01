@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: BSD-2-Clause
+#pragma once
 
+#include <bpf/bpf_helpers.h>
 
 struct {
     __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);

@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: BSD-2-Clause
 #pragma once
 
 #include <stdint.h>
 #include <linux/types.h>
-#include <linux/ip.h>
 #include <uapi/linux/bpf.h>
 
 #include <bpf/bpf_helpers.h>
@@ -14,6 +14,7 @@
 #include "vrft_sandesh.h"
 #include "vrft_maps.h"
 #include "vrft_utils.h"
+#include "vrft_packet.h"
 
 #define __unused __attribute__((unused))
 
@@ -430,6 +431,7 @@ handle_vr_bridge_table_data(void *ctx, int8_t is_return, vr_bridge_table_data *r
 static __inline int
 handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
     struct vr_packet s_req = {0};
+    uint32_t pull_len;
     uint64_t idx = incr_monotonic_counter(0);
 
     unsigned char eth_dmac[VR_ETHER_ALEN] = {0};
@@ -439,9 +441,10 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
     READ_KERNEL(vp_head);
     READ_KERNEL(vp_data);
     READ_KERNEL(vp_type);
+    READ_KERNEL(vp_end);
+    READ_KERNEL(vp_network_h);
 
-    struct vr_eth *eth = (struct  vr_eth *)(s_req.vp_head + s_req.vp_data);
-    
+    struct vr_eth *eth = (struct  vr_eth *)vr_pkt_data(&s_req);
     bpf_probe_read_kernel(&eth_proto, sizeof(eth_proto), &eth->eth_proto);
     bpf_probe_read_kernel(&eth_dmac, VR_ETHER_ALEN, &eth->eth_dmac);
     bpf_probe_read_kernel(&eth_smac, VR_ETHER_ALEN, &eth->eth_smac);
@@ -453,6 +456,7 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
         break;
     case VP_TYPE_IP:
         bpf_printk("IPv4 packet received\n");
+        parse_vr_ip4(&s_req);
         break;
     case VP_TYPE_IP6:
         bpf_printk("IPv6 packet received\n");
@@ -473,9 +477,9 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
         bpf_printk("Unknown Type received: %d\n", s_req.vp_type);
     }
 
-    //bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
-    //bpf_printk("ether_dmac: %02x:%02x:%02x\n", eth_dmac[3], eth_dmac[4], eth_dmac[5]);
-    //bpf_printk("ether_smac: %p\n", eth_smac[0], eth_smac[1], eth_smac[2], eth_smac[3], eth_smac[4], eth_smac[5]);
+    bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
+    bpf_printk("ether_dmac: %02x:%02x:%02x:", eth_dmac[0], eth_dmac[1], eth_dmac[2]);
+    bpf_printk("%02x:%02x:%02x\n", eth_dmac[3], eth_dmac[4], eth_dmac[5]);
 
     emit_vrft_event(ctx, is_return, idx);
     return 0;
