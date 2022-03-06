@@ -431,6 +431,7 @@ handle_vr_bridge_table_data(void *ctx, int8_t is_return, vr_bridge_table_data *r
 static __inline int
 handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
     struct vr_packet s_req = {0};
+    struct packet_data pkt_data = {0};
     uint32_t pull_len;
     uint64_t idx = incr_monotonic_counter(0);
 
@@ -449,6 +450,10 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
     bpf_probe_read_kernel(&eth_dmac, VR_ETHER_ALEN, &eth->eth_dmac);
     bpf_probe_read_kernel(&eth_smac, VR_ETHER_ALEN, &eth->eth_smac);
 
+    __builtin_memcpy(&pkt_data.eth_dmac, &eth_dmac, sizeof(pkt_data.eth_dmac));
+    __builtin_memcpy(&pkt_data.eth_smac, &eth_smac, sizeof(pkt_data.eth_smac));
+    __builtin_memcpy(&pkt_data.eth_proto, &eth_proto, sizeof(pkt_data.eth_proto));
+
     // For debugging
     switch (s_req.vp_type) {
     case VP_TYPE_ARP:
@@ -456,7 +461,7 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
         break;
     case VP_TYPE_IP:
         bpf_printk("IPv4 packet received\n");
-        parse_vr_ip4(&s_req);
+        parse_vr_ip4(&s_req, &pkt_data);
         break;
     case VP_TYPE_IP6:
         bpf_printk("IPv6 packet received\n");
@@ -477,10 +482,7 @@ handle_vr_packet(void *ctx, int8_t is_return, struct vr_packet *req) {
         bpf_printk("Unknown Type received: %d\n", s_req.vp_type);
     }
 
-    bpf_printk("ether_type: %d\n", bpf_ntohs(eth_proto));
-    bpf_printk("ether_dmac: %02x:%02x:%02x:", eth_dmac[0], eth_dmac[1], eth_dmac[2]);
-    bpf_printk("%02x:%02x:%02x\n", eth_dmac[3], eth_dmac[4], eth_dmac[5]);
-
+    bpf_map_update_elem(&vr_packet_map, &idx, &pkt_data, BPF_ANY);
     emit_vrft_event(ctx, is_return, idx);
     return 0;
 }

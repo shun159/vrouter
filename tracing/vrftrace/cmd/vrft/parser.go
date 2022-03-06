@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
+	"net"
 
+	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/shun159/vrftrace/vr"
+	"golang.org/x/sys/unix"
 )
 
 type PerfEvent struct {
@@ -14,6 +18,24 @@ type PerfEvent struct {
 	Idx         uint64
 	Fname       string
 	Sname       string
+}
+
+type VrPacket struct {
+	EthDstAddr net.HardwareAddr
+	EthSrcAddr net.HardwareAddr
+	EthType    uint16
+	IPVersion  uint8
+	IPProtocol uint8
+	IPSrcAddr  net.IP
+	IPDstAddr  net.IP
+}
+
+func (pkt *VrPacket) Read(ctx context.Context, p thrift.TProtocol) error {
+	return nil
+}
+
+func (pkt *VrPacket) Write(ctx context.Context, p thrift.TProtocol) error {
+	return nil
 }
 
 func parsePerfEvent(b []byte, symdb SymsDB) PerfEvent {
@@ -82,6 +104,9 @@ func parseSreq(perf PerfEvent, data []byte) vr.Sandesh {
 		return req
 	case "vr_bridge_table_data":
 		req := parseBtable(data)
+		return req
+	case "vr_packet":
+		req := parseVrPacket(data)
 		return req
 	default:
 		return nil
@@ -415,6 +440,25 @@ func parseBtable(b []byte) *vr.VrBridgeTableData {
 	req.BtableDev = int16(binary.LittleEndian.Uint16(b[6:8]))
 	// b[8:12] // pad
 	req.BtableSize = int32(binary.LittleEndian.Uint32(b[12:16]))
+
+	return req
+}
+
+func parseVrPacket(b []byte) *VrPacket {
+	req := &VrPacket{}
+	req.EthDstAddr = b[0:6]
+	req.EthSrcAddr = b[6:12]
+	req.EthType = binary.BigEndian.Uint16(b[12:14])
+	req.IPVersion = b[14:15][0]
+	req.IPProtocol = b[15:16][0]
+
+	if req.EthType == unix.ETH_P_IP {
+		req.IPSrcAddr = net.IP(b[16:20])
+		req.IPDstAddr = net.IP(b[144:148])
+	} else if req.EthType == unix.ETH_P_IPV6 {
+		req.IPSrcAddr = net.IP(b[16:144])
+		req.IPDstAddr = net.IP(b[144:272])
+	}
 
 	return req
 }

@@ -306,3 +306,13 @@ struct btable {
   uint8_t pad[4];
   uint32_t btable_size;
 };
+
+struct packet_data {
+  unsigned char  eth_dmac[VR_ETHER_ALEN];
+  unsigned char  eth_smac[VR_ETHER_ALEN];
+  unsigned short eth_proto;
+  unsigned char ip_version;
+  unsigned char ip_proto;
+  unsigned char ip_saddr[128];
+  unsigned char ip_daddr[128];
+};

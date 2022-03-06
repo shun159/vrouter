@@ -58,9 +58,8 @@ lh_network_header(struct vr_packet *pkt) {
   unsigned char *network_h;
   unsigned short offset;
 
-  if (pkt->vp_network_h < pkt->vp_end) {
+  if (pkt->vp_network_h < pkt->vp_end)
     return pkt->vp_head + pkt->vp_network_h;
-  }
 
   offset = pkt->vp_network_h - pkt->vp_end;
   skb = vp_os_packet(pkt);
@@ -69,9 +68,8 @@ lh_network_header(struct vr_packet *pkt) {
     frag = (struct sk_buff *)BPF_CORE_READ(skb_shinfo(skb), frag_list);
     frag_pkt = (struct vr_packet *)BPF_CORE_READ(frag, cb);
 
-    if (offset < frag_pkt->vp_end) {
+    if (offset < frag_pkt->vp_end)
       return frag_pkt->vp_head + offset;
-    }
 
     offset -= frag_pkt->vp_end;
     skb = frag;
@@ -81,19 +79,15 @@ lh_network_header(struct vr_packet *pkt) {
 }
 
 static __inline void
-parse_vr_ip4(struct vr_packet *pkt) {
-  unsigned char iphdr_first_byte, ip_vsn, ip_ttl, ip_hdrlen;
-  unsigned int hoge;
+parse_vr_ip4(struct vr_packet *pkt, struct packet_data *pkt_data) {
+  unsigned char iphdr_first_byte, ip_vsn;
   struct vr_ip *iph = (struct vr_ip *)lh_network_header(pkt);
-  bpf_probe_read(&iphdr_first_byte, 1, iph);
-  bpf_probe_read(&ip_ttl, 1, &iph->ip_ttl);
-  bpf_probe_read(&hoge, 4, &iph->ip_saddr);
-  ip_vsn = iphdr_first_byte >> 4;
-  ip_hdrlen = (iphdr_first_byte & 0x0f) * 4;
 
-  bpf_printk("ip_bytes: 0x%2x\n", iphdr_first_byte);
-  bpf_printk("ip_vsn: %d\n", ip_vsn);
-  bpf_printk("ip_hlen: %d\n", ip_hdrlen);
-  bpf_printk("ip_ttl: %d\n", ip_ttl);
-  bpf_printk("ip_ttl: %d\n", hoge);
+  bpf_probe_read(&iphdr_first_byte, 1, iph);
+  ip_vsn = iphdr_first_byte >> 4;
+
+  __builtin_memcpy(&pkt_data->ip_version, &ip_vsn, sizeof(pkt_data->ip_version));
+  bpf_probe_read(&pkt_data->ip_proto, 1, &iph->ip_proto);
+  bpf_probe_read(&pkt_data->ip_saddr, 4, &iph->ip_saddr);
+  bpf_probe_read(&pkt_data->ip_daddr, 4, &iph->ip_daddr);
 }
