@@ -1917,7 +1917,11 @@ pkt_gro_dev_setup(struct net_device *dev)
      * Initializing the interfaces with basic parameters to setup address
      * families.
      */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,16,0))
+    eth_random_addr(dev->dev_addr);
+#else
     random_ether_addr(dev->dev_addr);
+#endif
     dev->addr_len = ETH_ALEN;
 
     /*
@@ -1960,7 +1964,11 @@ pkt_rps_dev_setup(struct net_device *dev)
      * Initializing the interfaces with basic parameters to setup address
      * families.
      */
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,16,0))
+    eth_random_addr(dev->dev_addr);
+#else
     random_ether_addr(dev->dev_addr);
+#endif
     dev->addr_len = ETH_ALEN;
 
     dev->hard_header_len = ETH_HLEN;

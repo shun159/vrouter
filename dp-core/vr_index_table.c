@@ -5,7 +5,11 @@
 #include <vr_os.h>
 #include <vrouter.h>
 #if defined(__linux__)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,16,0))
+#include <linux/stdarg.h>
+#else
 #include <stdarg.h>
+#endif
 #elif defined(__FreeBSD__)
 #include <machine/stdarg.h>
 #endif

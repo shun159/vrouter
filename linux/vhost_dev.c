@@ -489,7 +489,11 @@ vhost_setup(struct net_device *dev)
     struct vhost_priv *vp = netdev_priv(dev);
 
     /* follow the standard steps */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,16,0))
+    eth_random_addr(dev->dev_addr);
+#else
     random_ether_addr(dev->dev_addr);
+#endif
     ether_setup(dev);
 #if ((defined(RHEL_MAJOR) && defined(RHEL_MINOR) && \
                (RHEL_MAJOR == 7) && (RHEL_MINOR >= 5)))
